@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\work\\unreal projects\\srpgw\\plugins\\weaponattachments\\source\\weaponattachments\\private\\weaponattachments.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\work\\unreal projects\\srpgw\\intermediate\\build\\win64\\x64\\srpgweditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.inclorderunreal5_4.h.pch",
+        "Includes": [
+            "d:\\work\\unreal projects\\srpgw\\plugins\\weaponattachments\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\weaponattachments\\definitions.weaponattachments.h",
+            "d:\\work\\unreal projects\\srpgw\\plugins\\weaponattachments\\source\\weaponattachments\\public\\weaponattachments.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
