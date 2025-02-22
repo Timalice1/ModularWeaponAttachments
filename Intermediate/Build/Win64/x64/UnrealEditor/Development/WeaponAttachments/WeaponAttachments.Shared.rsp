@@ -286,6 +286,7 @@
 /I "Editor\SceneDepthPickerMode\Public"
 /I "..\Intermediate\Build\Win64\UnrealEditor\Inc\AnimationEditMode\UHT"
 /I "Editor\AnimationEditMode\Public"
+/I "D:\Work\Unreal Projects\SRPGw\Plugins\WeaponAttachments\Intermediate\Build\Win64\UnrealEditor\Inc\WeaponAttachments\UHT"
 /I "D:\Work\Unreal Projects\SRPGw\Plugins\WeaponAttachments\Source"
 /I "D:\Work\Unreal Projects\SRPGw\Plugins\WeaponAttachments\Source\WeaponAttachments\Public"
 /external:W0

@@ -2,8 +2,19 @@
 	"RemapUnityFiles": 
 	{
 		"Module.WeaponAttachments.cpp.obj": [
+			"Attachment.gen.cpp.obj",
+			"AttachmentSlot.gen.cpp.obj",
+			"AttachmentsMenuButton.gen.cpp.obj",
+			"AttachmentsMenuWidget.gen.cpp.obj",
+			"AttachmentsPanel.gen.cpp.obj",
+			"WeaponAttachments.init.gen.cpp.obj",
+			"WeaponAttachmentsManager.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
-			"WeaponAttachments.cpp.obj"
+			"AttachmentsMenuButton.cpp.obj",
+			"AttachmentsMenuWidget.cpp.obj",
+			"AttachmentsPanel.cpp.obj",
+			"WeaponAttachments.cpp.obj",
+			"WeaponAttachmentsManager.cpp.obj"
 		]
 	}
 }
