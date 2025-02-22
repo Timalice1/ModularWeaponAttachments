@@ -9,12 +9,15 @@
 void UAttachmentsMenuWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-
     if (!attachmentsComponentRef)
         return;
+    UpdateMenu();
+}
 
+void UAttachmentsMenuWidget::UpdateMenu()
+{
     if (!panelTemplate || !slotButtonTemplate)
-        return Super::NativeConstruct();
+        return;
 
     // Clear containers at start
     slotsList->ClearChildren();
@@ -40,8 +43,6 @@ void UAttachmentsMenuWidget::NativeConstruct()
         _buttonToPanelMap.Add(newSlotButton, newPanel);
         newSlotButton->OnClick.AddDynamic(this, &ThisClass::TogglePanel);
     }
-
-    Super::NativeConstruct();
 }
 
 void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)

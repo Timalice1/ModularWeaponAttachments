@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
+enum class EAttachmentModuleTypes : uint8;
+
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 {
@@ -14,6 +16,7 @@ class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
     /* Add a new slot*/
     virtual void AddSlot(FAttachmentSlot &slot, class UMeshComponent *parent);
     virtual FAttachmentSlot *FindSlotByName(const FName &SlotName);
+    virtual FAttachmentSlot *FindSlotByType(const EAttachmentModuleTypes type);
 
 protected:
     UPROPERTY(EditDefaultsOnly, meta = (GetOptions = "GetOwnerSceneComponents"))
@@ -23,7 +26,7 @@ public:
     UWeaponAttachmentsManager();
     virtual void BeginPlay() override;
 
-    UFUNCTION()
+    UFUNCTION(BlueprintCallable)
     virtual void SetBaseWeaponMeshComponent(class UMeshComponent *baseWeaponMesh) { ownerMeshComponent = baseWeaponMesh; };
 
     UFUNCTION(BlueprintCallable)

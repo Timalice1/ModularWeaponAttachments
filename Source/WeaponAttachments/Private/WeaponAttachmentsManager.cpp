@@ -1,7 +1,6 @@
 #include "WeaponAttachmentsManager.h"
 #include "Attachment.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "AttachmentModuleTypes.h"
 
 UWeaponAttachmentsManager::UWeaponAttachmentsManager()
 {
@@ -34,6 +33,14 @@ FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByName(const FName &SlotName
     FAttachmentSlot *_targetSlot =
         _activeSlots.FindByPredicate([SlotName](const FAttachmentSlot &slot)
                                      { return slot.SlotName == SlotName; });
+    return _targetSlot;
+}
+
+FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const EAttachmentModuleTypes type)
+{
+    FAttachmentSlot *_targetSlot =
+        _activeSlots.FindByPredicate([type](const FAttachmentSlot &slot)
+                                     { return slot.slotType == type; });
     return _targetSlot;
 }
 

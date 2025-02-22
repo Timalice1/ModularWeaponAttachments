@@ -19,6 +19,10 @@ private:
 
 public:
     virtual void NativeConstruct() override;
+    virtual void UpdateMenu();
+
+    UFUNCTION(BlueprintCallable)
+    void SetAttachmentsManager(class UWeaponAttachmentsManager *manager) { attachmentsComponentRef = manager; }
 
 protected:
     UPROPERTY(meta = (BindWidget))

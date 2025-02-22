@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "AttachmentSlot.generated.h"
 
+enum class EAttachmentModuleTypes : uint8;
+
 USTRUCT(BlueprintType)
 struct FAttachmentSlot
 {
@@ -16,8 +18,11 @@ struct FAttachmentSlot
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = AttachmentSlot)
     FName SocketName;
 
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
+    EAttachmentModuleTypes slotType;
+
     UPROPERTY()
-    class UStaticMeshComponent *CurrentModule;
+    class UMeshComponent *CurrentModule;
     UPROPERTY()
     class UMeshComponent *parent;
 
@@ -26,7 +31,7 @@ struct FAttachmentSlot
         return FCrc::MemCrc32(&Other, sizeof(FAttachmentSlot));
     }
 
-    bool operator==(const FAttachmentSlot &Other) const 
+    bool operator==(const FAttachmentSlot &Other) const
     {
         return SlotName == Other.SlotName;
     }
