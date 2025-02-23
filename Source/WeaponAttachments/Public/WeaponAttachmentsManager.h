@@ -32,10 +32,8 @@ public:
     UFUNCTION(BlueprintCallable)
     TArray<FAttachmentSlot> GetActiveSlots() { return _activeSlots; };
 
-    UFUNCTION(BlueprintCallable)
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
 
-    UFUNCTION(BlueprintCallable)
     TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType);
 
 public:
@@ -55,12 +53,23 @@ public:
     virtual void RemoveModule(const FName &SlotName = FName("ModuleSlot"));
 
 protected:
+    UPROPERTY(EditDefaultsOnly)
+    TObjectPtr<class UDataTable> AttachmentsTable;
+
     /* Default weapon attachment slots (persistant)*/
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = AttachmentsManager)
     TSet<FAttachmentSlot> attachmentSlots;
 
-    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager)
-    TSet<FAttachmentModuleData> compatibleAttachments;
+    UFUNCTION()
+    TArray<FName> GetAttachmentsTableRows() const
+    {
+        if (AttachmentsTable)
+            return AttachmentsTable->GetRowNames();
+        return TArray<FName>();
+    };
+
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager, meta = (GetOptions = "GetAttachmentsTableRows"))
+    TSet<FName> compatibleAttachments;
 
     /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;

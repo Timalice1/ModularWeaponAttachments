@@ -101,12 +101,24 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
 {
-    return compatibleAttachments.Array();
+    if (compatibleAttachments.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[%s - %s]: compatible attachments list are empty"), *GetOwner()->GetName(), *GetName());
+        return TArray<FAttachmentModuleData>();
+    }
+
+    TArray<FAttachmentModuleData> outRows;
+    for (const FName &rowName : compatibleAttachments)
+    {
+        FAttachmentModuleData *rowFound = AttachmentsTable->FindRow<FAttachmentModuleData>(rowName, FString());
+        if (rowFound)
+            outRows.Add(*rowFound);
+    }
+    return outRows;
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType)
 {
-    TArray<FAttachmentModuleData> modulesArray = compatibleAttachments.Array();
-    return modulesArray.FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
-                                          { return attachmentModule.ModuleType == moduleType; });
+    return GetCompatibleAttachments().FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
+                                                        { return attachmentModule.ModuleType == moduleType; });
 }
