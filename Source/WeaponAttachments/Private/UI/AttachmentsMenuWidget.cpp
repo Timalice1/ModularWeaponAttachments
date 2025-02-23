@@ -35,6 +35,7 @@ void UAttachmentsMenuWidget::UpdateMenu()
 
         newSlotButton->buttonLabelText = _label;
         newPanel->panelLabel_Text = _label;
+        newPanel->SlotType = activeSlot.slotType;
         newPanel->SetVisibility(ESlateVisibility::Collapsed);
 
         slotsList->AddChild(newSlotButton);
@@ -66,5 +67,7 @@ void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)
     }
 
     currentActivePanel = targetPanel;
+    currentActivePanel->SetAttachmentsManager(attachmentsComponentRef);
+    currentActivePanel->UpdatePanel();
     currentActivePanel->SetVisibility(ESlateVisibility::Visible);
 }

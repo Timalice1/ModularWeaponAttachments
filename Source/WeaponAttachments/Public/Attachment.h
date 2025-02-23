@@ -4,6 +4,8 @@
 #include "AttachmentSlot.h"
 #include "Attachment.generated.h"
 
+enum class EAttachmentModuleTypes : uint8;
+
 USTRUCT()
 struct FAttachmentModuleData : public FTableRowBase
 {
@@ -12,12 +14,20 @@ struct FAttachmentModuleData : public FTableRowBase
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModuleParam)
     class UStaticMesh *Mesh;
 
+    UPROPERTY(EditDefaultsOnly, Category = BaseModuleParam)
+    EAttachmentModuleTypes ModuleType;  
+
     /*Child attachment slots*/
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModuleParam)
     TSet<FAttachmentSlot> childSlots;
 
     // Override base weapon property by attachment modifiers
     virtual void OverrideWeaponData(struct FFireWeaponProperties &weaponData) {};
+
+    friend uint32 GetTypeHash(const FAttachmentModuleData &Other)
+    {
+        return FCrc::MemCrc32(&Other, sizeof(FAttachmentModuleData));
+    }
 };
 
 /*

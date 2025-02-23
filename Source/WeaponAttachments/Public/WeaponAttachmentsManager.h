@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "AttachmentSlot.h"
+#include "Attachment.h"
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
@@ -13,14 +14,13 @@ class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 {
     GENERATED_BODY()
 
+    TObjectPtr<class UMeshComponent> ownerMeshComponent;
     /* Add a new slot*/
     virtual void AddSlot(FAttachmentSlot &slot, class UMeshComponent *parent);
+
+public:
     virtual FAttachmentSlot *FindSlotByName(const FName &SlotName);
     virtual FAttachmentSlot *FindSlotByType(const EAttachmentModuleTypes type);
-
-protected:
-    UPROPERTY(EditDefaultsOnly, meta = (GetOptions = "GetOwnerSceneComponents"))
-    TObjectPtr<class UMeshComponent> ownerMeshComponent;
 
 public:
     UWeaponAttachmentsManager();
@@ -31,6 +31,12 @@ public:
 
     UFUNCTION(BlueprintCallable)
     TArray<FAttachmentSlot> GetActiveSlots() { return _activeSlots; };
+
+    UFUNCTION(BlueprintCallable)
+    TArray<FAttachmentModuleData> GetCompatibleAttachments();
+
+    UFUNCTION(BlueprintCallable)
+    TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType);
 
 public:
     /**
@@ -52,6 +58,9 @@ protected:
     /* Default weapon attachment slots (persistant)*/
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AttachmentsSystem")
     TSet<FAttachmentSlot> attachmentSlots;
+
+    UPROPERTY(EditDefaultsOnly, Category = AttachmetnSystem)
+    TSet<FAttachmentModuleData> compatibleAttachments;
 
     /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;

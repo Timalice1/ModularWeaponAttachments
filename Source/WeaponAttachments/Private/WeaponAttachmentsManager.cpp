@@ -1,5 +1,4 @@
 #include "WeaponAttachmentsManager.h"
-#include "Attachment.h"
 #include "AttachmentModuleTypes.h"
 
 UWeaponAttachmentsManager::UWeaponAttachmentsManager()
@@ -14,7 +13,8 @@ void UWeaponAttachmentsManager::BeginPlay()
 
     if (!ownerMeshComponent)
     {
-        UE_LOG(LogTemp, Warning, TEXT("WeaponAttachmetnsManager - missing reference to owner mesh component (SceneComponent)"));
+        UE_LOG(LogTemp, Warning, TEXT("WeaponAttachmetnsManager - missing reference to owner mesh component\n"
+                                      "\tUse SetBaseWeaponMeshComponent() to do that"));
         return;
     }
 
@@ -46,7 +46,6 @@ FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const EAttachmentModu
 
 void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAttachmentModuleData &moduleData)
 {
-    /* Find slot by name */
     FAttachmentSlot *_targetSlot = FindSlotByName(SlotName);
     if (!_targetSlot)
     {
@@ -98,4 +97,16 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 
     _targetSlot->CurrentModule->DestroyComponent(true);
     _targetSlot->CurrentModule = nullptr;
+}
+
+TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
+{
+    return compatibleAttachments.Array();
+}
+
+TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType)
+{
+    TArray<FAttachmentModuleData> modulesArray = compatibleAttachments.Array();
+    return modulesArray.FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
+                                          { return attachmentModule.ModuleType == moduleType; });
 }
