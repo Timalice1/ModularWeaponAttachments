@@ -44,22 +44,22 @@ public:
      * @param SlotName required slot name
      * @param moduleData new module data to install
      */
-    UFUNCTION(BlueprintCallable, Category = WeaponAttachmentsManager)
+    UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
     virtual void InstallModule(const FName &SlotName, const struct FAttachmentModuleData &moduleData);
 
     /**
      * @brief Remove current active module from required slot
      * @param SlotName Required slot name
      */
-    UFUNCTION(BlueprintCallable, Category = WeaponAttachmentsManager)
+    UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
     virtual void RemoveModule(const FName &SlotName = FName("ModuleSlot"));
 
 protected:
     /* Default weapon attachment slots (persistant)*/
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AttachmentsSystem")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = AttachmentsManager)
     TSet<FAttachmentSlot> attachmentSlots;
 
-    UPROPERTY(EditDefaultsOnly, Category = AttachmetnSystem)
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager)
     TSet<FAttachmentModuleData> compatibleAttachments;
 
     /* Active attachment slots, includes child slots from attachments*/

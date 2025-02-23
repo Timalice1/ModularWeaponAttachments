@@ -11,14 +11,17 @@ struct FAttachmentModuleData : public FTableRowBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModuleParam)
+    UPROPERTY(EditDefaultsOnly, Category = BaseModule)
+    FName DisplayName;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModule)
     class UStaticMesh *Mesh;
 
-    UPROPERTY(EditDefaultsOnly, Category = BaseModuleParam)
-    EAttachmentModuleTypes ModuleType;  
+    UPROPERTY(EditDefaultsOnly, Category = BaseModule)
+    EAttachmentModuleTypes ModuleType;
 
     /*Child attachment slots*/
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModuleParam)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModule)
     TSet<FAttachmentSlot> childSlots;
 
     // Override base weapon property by attachment modifiers
