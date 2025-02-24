@@ -57,8 +57,13 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     RemoveModule(SlotName);
 
     // Remove and exit if try to install same module
-    // if (_activeAttachments.Contains(moduleData))
-    //     return;
+    if (_activeAttachments.Contains(moduleData))
+    {
+        const int32 index = _activeAttachments.IndexOfByKey(moduleData);
+        _activeAttachments.RemoveAtSwap(index, 1, EAllowShrinking::No);
+        _activeAttachments.Shrink();
+        return;
+    }
 
     UStaticMeshComponent *newComp = NewObject<UStaticMeshComponent>(GetOwner(), UStaticMeshComponent::StaticClass(), SlotName);
     if (!newComp)

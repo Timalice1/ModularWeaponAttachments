@@ -29,7 +29,7 @@ struct FAttachmentModuleData : public FTableRowBase
         return FCrc::MemCrc32(&Other, sizeof(FAttachmentModuleData));
     }
 
-    inline bool operator==(const FAttachmentModuleData &Other)
+    inline bool operator==(const FAttachmentModuleData &Other) const 
     {
         return DisplayName == Other.DisplayName;
     }
