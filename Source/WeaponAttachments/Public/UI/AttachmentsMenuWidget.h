@@ -19,6 +19,7 @@ private:
 
 public:
     virtual void NativeConstruct() override;
+    UFUNCTION()
     virtual void UpdateMenu();
 
     UFUNCTION(BlueprintCallable)

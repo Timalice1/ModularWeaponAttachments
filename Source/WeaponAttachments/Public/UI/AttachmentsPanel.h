@@ -2,9 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Attachment.h"
 #include "AttachmentsPanel.generated.h"
 
 enum class EAttachmentModuleTypes : uint8;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnModuleInstalledSignature);
 
 UCLASS()
 class WEAPONATTACHMENTS_API UAttachmentsPanel : public UUserWidget
@@ -13,6 +16,8 @@ class WEAPONATTACHMENTS_API UAttachmentsPanel : public UUserWidget
 
     UPROPERTY()
     TObjectPtr<class UWeaponAttachmentsManager> attachmentsManagerRef;
+    UPROPERTY()
+    TMap<class UAttachmentsMenuButton *, FAttachmentModuleData> _buttonToModuleMap;
 
 public:
     virtual void NativeConstruct() override;
@@ -28,7 +33,10 @@ public:
     virtual void UpdatePanel();
 
     UPROPERTY()
-    EAttachmentModuleTypes SlotType;
+    FAttachmentSlot slotData;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnModuleInstalledSignature OnModuleInstalled;
 
 protected:
     UPROPERTY(meta = (BindWidget))
@@ -39,4 +47,8 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)
     TSubclassOf<class UAttachmentsMenuButton> slotButtonTemplate;
+
+protected:
+    UFUNCTION()
+    void OnAttachmentButtonClicked(class UAttachmentsMenuButton *button);
 };

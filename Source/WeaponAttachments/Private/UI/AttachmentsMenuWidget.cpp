@@ -35,14 +35,16 @@ void UAttachmentsMenuWidget::UpdateMenu()
 
         newSlotButton->buttonLabelText = _label;
         newPanel->panelLabel_Text = _label;
-        newPanel->SlotType = activeSlot.slotType;
+        newPanel->slotData = activeSlot;
         newPanel->SetVisibility(ESlateVisibility::Collapsed);
 
         slotsList->AddChild(newSlotButton);
         panelsContainer->AddChild(newPanel);
 
-        _buttonToPanelMap.Add(newSlotButton, newPanel);
         newSlotButton->OnClick.AddDynamic(this, &ThisClass::TogglePanel);
+        newPanel->OnModuleInstalled.AddDynamic(this, &ThisClass::UpdateMenu);
+
+        _buttonToPanelMap.Add(newSlotButton, newPanel);
     }
 }
 
