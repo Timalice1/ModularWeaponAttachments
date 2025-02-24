@@ -54,7 +54,7 @@ public:
     virtual void RemoveModule(const FName &SlotName = FName("ModuleSlot"));
 
 protected:
-    UPROPERTY(EditDefaultsOnly)
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager)
     TObjectPtr<class UDataTable> AttachmentsTable;
 
     /* Default weapon attachment slots (persistant)*/

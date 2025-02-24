@@ -46,6 +46,7 @@ FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const EAttachmentModu
 
 void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAttachmentModuleData &moduleData)
 {
+    // Get the required slot where attachment need to be installed
     FAttachmentSlot *_targetSlot = FindSlotByName(SlotName);
     if (!_targetSlot)
     {
@@ -112,6 +113,12 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
 {
+    if(!IsValid(AttachmentsTable))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[%s-%s]: missing attachments data table property reference"), *GetOwner()->GetName(), *GetName());
+        return TArray<FAttachmentModuleData>();
+    }    
+
     if (compatibleAttachments.IsEmpty())
     {
         UE_LOG(LogTemp, Warning, TEXT("[%s - %s]: compatible attachments list are empty"), *GetOwner()->GetName(), *GetName());

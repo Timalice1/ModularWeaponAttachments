@@ -26,6 +26,7 @@ public class WeaponAttachments : ModuleRules
 			new string[]
 			{
 				"Core",
+				"UMG"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -37,8 +38,7 @@ public class WeaponAttachments : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore",
-				"UMG"
+				"SlateCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
