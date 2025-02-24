@@ -23,6 +23,7 @@ struct FAttachmentSlot
 
     UPROPERTY()
     class UMeshComponent *CurrentModule;
+
     UPROPERTY()
     class UMeshComponent *parent;
 

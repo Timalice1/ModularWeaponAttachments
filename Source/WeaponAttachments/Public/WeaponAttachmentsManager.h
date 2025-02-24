@@ -31,9 +31,10 @@ public:
 
     UFUNCTION(BlueprintCallable)
     TArray<FAttachmentSlot> GetActiveSlots() { return _activeSlots; };
+    UFUNCTION(BlueprintCallable)
+    TArray<FAttachmentModuleData> GetActiveAttachments() { return _activeAttachments; };
 
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
-
     TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType);
 
 public:
@@ -73,4 +74,7 @@ protected:
 
     /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;
+
+    /* Currently used attachment modules on the weapon*/
+    TArray<FAttachmentModuleData> _activeAttachments;
 };

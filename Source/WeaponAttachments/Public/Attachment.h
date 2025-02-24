@@ -24,31 +24,13 @@ struct FAttachmentModuleData : public FTableRowBase
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModule)
     TSet<FAttachmentSlot> childSlots;
 
-    // Override base weapon property by attachment modifiers
-    virtual void OverrideWeaponData(struct FFireWeaponProperties &weaponData) {};
-
     friend uint32 GetTypeHash(const FAttachmentModuleData &Other)
     {
         return FCrc::MemCrc32(&Other, sizeof(FAttachmentModuleData));
     }
-};
 
-/*
-UCLASS(BlueprintType)
-class WEAPONATTACHMENTS_API UAttachmentModule : public UStaticMeshComponent
-{
-    GENERATED_BODY()
-
-public:
-    FAttachmentModuleData moduleData;
-
-public:
-    UAttachmentModule()
+    inline bool operator==(const FAttachmentModuleData &Other)
     {
-        PrimaryComponentTick.bCanEverTick = false;
-        PrimaryComponentTick.bStartWithTickEnabled = false;
-    };
-    virtual void BeginPlay() override {};
-    virtual FAttachmentModuleData GetModuleData() { return moduleData; };
+        return DisplayName == Other.DisplayName;
+    }
 };
-*/

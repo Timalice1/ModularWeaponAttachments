@@ -56,14 +56,20 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     // Remove existing module and child slots before adding new one
     RemoveModule(SlotName);
 
+    // Remove and exit if try to install same module
+    // if (_activeAttachments.Contains(moduleData))
+    //     return;
+
     UStaticMeshComponent *newComp = NewObject<UStaticMeshComponent>(GetOwner(), UStaticMeshComponent::StaticClass(), SlotName);
     if (!newComp)
         return;
+
     newComp->AttachToComponent(_targetSlot->parent, FAttachmentTransformRules::SnapToTargetIncludingScale, _targetSlot->SocketName);
     newComp->SetStaticMesh(moduleData.Mesh);
     newComp->SetCollisionProfileName("NoCollision");
     newComp->RegisterComponent();
     _targetSlot->CurrentModule = newComp;
+    _activeAttachments.Add(moduleData);
 
     // Add child slots to global active slots list
     if (!moduleData.childSlots.IsEmpty())
