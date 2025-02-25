@@ -98,6 +98,7 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     TArray<FAttachmentSlot> childSlots =
         _activeSlots.FilterByPredicate([_targetSlot](const FAttachmentSlot &slot)
                                        { return slot.parent == _targetSlot->CurrentModule; });
+    
     // Recursively remove child modules and slots
     for (FAttachmentSlot &childSlot : childSlots)
     {

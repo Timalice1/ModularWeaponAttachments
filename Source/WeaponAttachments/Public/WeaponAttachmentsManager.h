@@ -72,9 +72,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager, meta = (GetOptions = "GetAttachmentsTableRows"))
     TSet<FName> compatibleAttachments;
 
+private:
     /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;
-
     /* Currently used attachment modules on the weapon*/
     TArray<FAttachmentModuleData> _activeAttachments;
 };
