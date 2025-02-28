@@ -51,8 +51,6 @@ void UAttachmentsPanel::OnAttachmentButtonClicked(UAttachmentsMenuButton *button
         UE_LOG(LogTemp, Warning, TEXT("[%s] - Required module not found"), *GetName());
         return;
     }
-
-    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Magenta, FString::Printf(TEXT("%s - module installed"), *targetModule->DisplayName.ToString()));
     attachmentsManagerRef->InstallModule(slotData.SlotName, *targetModule);
     OnModuleInstalled.Broadcast();
 }

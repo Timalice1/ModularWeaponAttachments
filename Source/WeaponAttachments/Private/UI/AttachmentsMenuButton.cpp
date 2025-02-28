@@ -17,6 +17,5 @@ void UAttachmentsMenuButton::NativeConstruct()
 
 void UAttachmentsMenuButton::OnButtonClicked()
 {
-    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, FString::Printf(TEXT("Some button clicked")));
     OnClick.Broadcast(this);
 }

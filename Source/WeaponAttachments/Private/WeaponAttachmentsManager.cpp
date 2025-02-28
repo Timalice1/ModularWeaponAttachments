@@ -55,27 +55,25 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     }
 
     // Remove existing module and child slots before adding new one
-    RemoveModule(SlotName);
-
-    // Remove and exit if try to install same module
-    if (_activeAttachments.Contains(moduleData))
-    {
-        const int32 index = _activeAttachments.IndexOfByKey(moduleData);
-        _activeAttachments.RemoveAtSwap(index, 1, EAllowShrinking::No);
-        _activeAttachments.Shrink();
+    if (_activeAttachments.FindByPredicate([moduleData](const UAttachmentModuleComponent *activeModule)
+                                           { return activeModule->moduleData == moduleData; }))
+    { // Just remove module and exit if try to install already intalled module
+        RemoveModule(SlotName);
         return;
     }
+    RemoveModule(SlotName);
 
-    UStaticMeshComponent *newComp = NewObject<UStaticMeshComponent>(GetOwner(), UStaticMeshComponent::StaticClass(), SlotName);
+    UAttachmentModuleComponent *newComp = NewObject<UAttachmentModuleComponent>(GetOwner(), UAttachmentModuleComponent::StaticClass(), SlotName);
     if (!newComp)
         return;
 
     newComp->AttachToComponent(_targetSlot->parent, FAttachmentTransformRules::SnapToTargetIncludingScale, _targetSlot->SocketName);
     newComp->SetStaticMesh(moduleData.Mesh);
     newComp->SetCollisionProfileName("NoCollision");
+    newComp->moduleData = moduleData;
     newComp->RegisterComponent();
     _targetSlot->CurrentModule = newComp;
-    _activeAttachments.Add(moduleData);
+    _activeAttachments.Add(newComp);
 
     // Add child slots to global active slots list
     if (!moduleData.childSlots.IsEmpty())
@@ -98,7 +96,7 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     TArray<FAttachmentSlot> childSlots =
         _activeSlots.FilterByPredicate([_targetSlot](const FAttachmentSlot &slot)
                                        { return slot.parent == _targetSlot->CurrentModule; });
-    
+
     // Recursively remove child modules and slots
     for (FAttachmentSlot &childSlot : childSlots)
     {
@@ -108,17 +106,18 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     }
     _activeSlots.Shrink();
 
+    _activeAttachments.Remove(_targetSlot->CurrentModule);
     _targetSlot->CurrentModule->DestroyComponent(true);
     _targetSlot->CurrentModule = nullptr;
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
 {
-    if(!IsValid(AttachmentsTable))
+    if (!IsValid(AttachmentsTable))
     {
         UE_LOG(LogTemp, Warning, TEXT("[%s-%s]: missing attachments data table property reference"), *GetOwner()->GetName(), *GetName());
         return TArray<FAttachmentModuleData>();
-    }    
+    }
 
     if (compatibleAttachments.IsEmpty())
     {

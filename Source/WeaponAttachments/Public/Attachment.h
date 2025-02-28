@@ -29,8 +29,24 @@ struct FAttachmentModuleData : public FTableRowBase
         return FCrc::MemCrc32(&Other, sizeof(FAttachmentModuleData));
     }
 
-    inline bool operator==(const FAttachmentModuleData &Other) const 
+    inline bool operator==(const FAttachmentModuleData &Other) const
     {
         return DisplayName == Other.DisplayName;
     }
+};
+
+UCLASS()
+class WEAPONATTACHMENTS_API UAttachmentModuleComponent : public UStaticMeshComponent
+{
+    GENERATED_BODY()
+
+public:
+    UAttachmentModuleComponent()
+    {
+        PrimaryComponentTick.bCanEverTick = false;
+        PrimaryComponentTick.bStartWithTickEnabled = false;
+    }
+
+    UPROPERTY()
+    FAttachmentModuleData moduleData;
 };
