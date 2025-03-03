@@ -4,8 +4,6 @@
 #include "AttachmentSlot.h"
 #include "Attachment.generated.h"
 
-enum class EAttachmentModuleTypes : uint8;
-
 USTRUCT()
 struct FAttachmentModuleData : public FTableRowBase
 {
@@ -18,7 +16,7 @@ struct FAttachmentModuleData : public FTableRowBase
     class UStaticMesh *Mesh;
 
     UPROPERTY(EditDefaultsOnly, Category = BaseModule)
-    EAttachmentModuleTypes ModuleType;
+    uint8 ModuleType;
 
     /*Child attachment slots*/
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = BaseModule)

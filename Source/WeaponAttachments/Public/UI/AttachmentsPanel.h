@@ -5,8 +5,6 @@
 #include "Attachment.h"
 #include "AttachmentsPanel.generated.h"
 
-enum class EAttachmentModuleTypes : uint8;
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnModuleInstalledSignature);
 
 UCLASS()

@@ -1,5 +1,4 @@
 #include "WeaponAttachmentsManager.h"
-#include "AttachmentModuleTypes.h"
 
 UWeaponAttachmentsManager::UWeaponAttachmentsManager()
 {
@@ -36,7 +35,7 @@ FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByName(const FName &SlotName
     return _targetSlot;
 }
 
-FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const EAttachmentModuleTypes type)
+FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const uint8 type)
 {
     FAttachmentSlot *_targetSlot =
         _activeSlots.FindByPredicate([type](const FAttachmentSlot &slot)
@@ -135,7 +134,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
     return outRows;
 }
 
-TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType)
+TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsByType(uint8 moduleType)
 {
     return GetCompatibleAttachments().FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
                                                         { return attachmentModule.ModuleType == moduleType; });

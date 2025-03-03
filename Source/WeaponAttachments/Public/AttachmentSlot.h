@@ -3,8 +3,6 @@
 #include "CoreMinimal.h"
 #include "AttachmentSlot.generated.h"
 
-enum class EAttachmentModuleTypes : uint8;
-
 USTRUCT(BlueprintType)
 struct FAttachmentSlot
 {
@@ -19,7 +17,7 @@ struct FAttachmentSlot
     FName SocketName;
 
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
-    EAttachmentModuleTypes slotType;
+    uint8 slotType;
 
     UPROPERTY()
     class UAttachmentModuleComponent *CurrentModule;

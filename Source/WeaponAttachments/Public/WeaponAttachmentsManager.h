@@ -7,8 +7,6 @@
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
-enum class EAttachmentModuleTypes : uint8;
-
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 {
@@ -20,7 +18,7 @@ class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 
 public:
     virtual FAttachmentSlot *FindSlotByName(const FName &SlotName);
-    virtual FAttachmentSlot *FindSlotByType(const EAttachmentModuleTypes type);
+    virtual FAttachmentSlot *FindSlotByType(const uint8 type);
 
 public:
     UWeaponAttachmentsManager();
@@ -35,7 +33,7 @@ public:
     TArray<class UAttachmentModuleComponent *> GetActiveAttachments() { return _activeAttachments; };
 
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
-    TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(EAttachmentModuleTypes moduleType);
+    TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(uint8 moduleType);
 
 public:
     /**
