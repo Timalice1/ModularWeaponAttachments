@@ -80,6 +80,8 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
         for (FAttachmentSlot &slot : moduleData.childSlots.Array())
             AddSlot(slot, newComp);
     }
+
+    OnModuleInstalled.Broadcast(newComp);
 }
 
 void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)

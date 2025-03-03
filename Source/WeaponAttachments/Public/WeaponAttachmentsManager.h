@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttachmentInstalledSignature, class UAttachmentModuleComponent*, ModuleComponent);
+
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 {
@@ -31,9 +33,17 @@ public:
     TArray<FAttachmentSlot> GetActiveSlots() { return _activeSlots; };
     UFUNCTION(BlueprintCallable)
     TArray<class UAttachmentModuleComponent *> GetActiveAttachments() { return _activeAttachments; };
+    TArray<class UAttachmentModuleComponent *> GetActiveAttachmentsByType(uint8 type)
+    {
+        return _activeAttachments.FilterByPredicate([type](const UAttachmentModuleComponent *attachment)
+                                                    { return attachment->moduleData.ModuleType == type; });
+    };
 
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
     TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(uint8 moduleType);
+
+    UPROPERTY(BlueprintAssignable)
+    FOnAttachmentInstalledSignature OnModuleInstalled;
 
 public:
     /**
