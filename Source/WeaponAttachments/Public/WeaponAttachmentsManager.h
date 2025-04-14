@@ -7,7 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttachmentInstalledSignature, class UAttachmentModuleComponent*, ModuleComponent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnModuleInstalledEvent, class UAttachmentModuleComponent *, ModuleComponent, uint8, ModuleType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnModuleRemovedEvent, class UAttachmentModuleComponent *, ModuleComponent, uint8, ModuleType);
 
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
@@ -43,7 +44,9 @@ public:
     TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(uint8 moduleType);
 
     UPROPERTY(BlueprintAssignable)
-    FOnAttachmentInstalledSignature OnModuleInstalled;
+    FOnModuleInstalledEvent OnModuleInstalled;
+    UPROPERTY(BlueprintAssignable)
+    FOnModuleRemovedEvent OnModuleRemoved;
 
 public:
     /**
@@ -53,6 +56,10 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
     virtual void InstallModule(const FName &SlotName, const struct FAttachmentModuleData &moduleData);
+
+    /*Install default module for this slot*/
+    UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
+    virtual void InstallDefault(FAttachmentSlot &slot);
 
     /**
      * @brief Remove current active module from required slot

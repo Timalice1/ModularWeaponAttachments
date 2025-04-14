@@ -19,6 +19,9 @@ struct FAttachmentSlot
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     uint8 slotType;
 
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
+    FName DefaultAttachment = FName("None");
+
     UPROPERTY()
     class UAttachmentModuleComponent *CurrentModule;
 

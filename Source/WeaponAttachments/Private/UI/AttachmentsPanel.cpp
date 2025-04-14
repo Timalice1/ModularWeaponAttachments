@@ -27,6 +27,7 @@ void UAttachmentsPanel::UpdatePanel()
 
     attachmentsList->ClearChildren();
 
+    // Spawn compatible modules buttons by their type
     TArray<FAttachmentModuleData> compatibleAttachments = attachmentsManagerRef->GetCompatibleAttachmentsByType(slotData.slotType);
     for (FAttachmentModuleData &attachmentModule : compatibleAttachments)
     {

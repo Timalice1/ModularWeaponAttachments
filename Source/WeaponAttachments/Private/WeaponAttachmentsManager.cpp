@@ -9,22 +9,33 @@ UWeaponAttachmentsManager::UWeaponAttachmentsManager()
 void UWeaponAttachmentsManager::BeginPlay()
 {
     Super::BeginPlay();
-
     if (!ownerMeshComponent)
     {
         UE_LOG(LogTemp, Warning, TEXT("WeaponAttachmetnsManager - missing reference to owner mesh component\n"
                                       "\tUse SetBaseWeaponMeshComponent() to do that"));
         return;
     }
-
+    // Add default weapon slots
     for (FAttachmentSlot &slot : attachmentSlots)
         AddSlot(slot, ownerMeshComponent);
 }
 
 void UWeaponAttachmentsManager::AddSlot(FAttachmentSlot &slot, UMeshComponent *parent)
 {
+    /*Create new slot*/
     slot.parent = parent;
     _activeSlots.Add(slot);
+    InstallDefault(slot);
+}
+
+void UWeaponAttachmentsManager::InstallDefault(FAttachmentSlot &slot)
+{
+    if (slot.DefaultAttachment != NAME_None)
+    {
+        FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(slot.DefaultAttachment, FString());
+        if (defaultModule)
+            InstallModule(slot.SlotName, *defaultModule);
+    }
 }
 
 FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByName(const FName &SlotName)
@@ -81,7 +92,7 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
             AddSlot(slot, newComp);
     }
 
-    OnModuleInstalled.Broadcast(newComp);
+    OnModuleInstalled.Broadcast(newComp, moduleData.ModuleType);
 }
 
 void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
@@ -108,8 +119,11 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     _activeSlots.Shrink();
 
     _activeAttachments.Remove(_targetSlot->CurrentModule);
+    OnModuleRemoved.Broadcast(_targetSlot->CurrentModule, _targetSlot->CurrentModule->moduleData.ModuleType);
+
     _targetSlot->CurrentModule->DestroyComponent(true);
     _targetSlot->CurrentModule = nullptr;
+    InstallDefault(*_targetSlot);
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
@@ -138,6 +152,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsByType(uint8 moduleType)
 {
-    return GetCompatibleAttachments().FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
-                                                        { return attachmentModule.ModuleType == moduleType; });
+    return GetCompatibleAttachments()
+        .FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
+                           { return attachmentModule.ModuleType == moduleType; });
 }
