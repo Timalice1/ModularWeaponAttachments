@@ -18,6 +18,7 @@ class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
     TObjectPtr<class UMeshComponent> ownerMeshComponent;
     /* Add a new slot*/
     virtual void AddSlot(FAttachmentSlot &slot, class UMeshComponent *parent);
+    virtual void InstallDefault(FAttachmentSlot &slot);
 
 public:
     virtual FAttachmentSlot *FindSlotByName(const FName &SlotName);
@@ -56,10 +57,6 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
     virtual void InstallModule(const FName &SlotName, const struct FAttachmentModuleData &moduleData);
-
-    /*Install default module for this slot*/
-    UFUNCTION(BlueprintCallable, Category = AttachmentsManager)
-    virtual void InstallDefault(FAttachmentSlot &slot);
 
     /**
      * @brief Remove current active module from required slot
