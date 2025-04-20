@@ -16,9 +16,14 @@ private:
     TMap<class UAttachmentsMenuButton *, class UAttachmentsPanel *> _buttonToPanelMap;
     UPROPERTY()
     class UAttachmentsPanel *currentActivePanel = nullptr;
+    UPROPERTY()
+    TArray<TObjectPtr<class UWidgetComponent>> slotWidgets;
+
+    virtual void ClearSlotsWidgets();
 
 public:
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
     UFUNCTION()
     virtual void UpdateMenu();
 
@@ -27,11 +32,8 @@ public:
 
 protected:
     UPROPERTY(meta = (BindWidget))
-    TObjectPtr<class UVerticalBox> slotsList;
-    UPROPERTY(meta = (BindWidget))
     TObjectPtr<class UOverlay> panelsContainer;
 
-protected:
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)
     TSubclassOf<class UAttachmentsMenuButton> slotButtonTemplate;
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)

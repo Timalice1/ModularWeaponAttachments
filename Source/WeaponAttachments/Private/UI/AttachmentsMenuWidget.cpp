@@ -1,10 +1,11 @@
 #include "UI/AttachmentsMenuWidget.h"
 #include "UI/AttachmentsMenuButton.h"
 #include "UI/AttachmentsPanel.h"
-#include "WeaponAttachmentsManager.h"
-#include "AttachmentSlot.h"
 #include "Components/VerticalBox.h"
 #include "Components/Overlay.h"
+#include "Components/WidgetComponent.h"
+#include "WeaponAttachmentsManager.h"
+#include "AttachmentSlot.h"
 
 void UAttachmentsMenuWidget::NativeConstruct()
 {
@@ -14,19 +15,26 @@ void UAttachmentsMenuWidget::NativeConstruct()
     UpdateMenu();
 }
 
+void UAttachmentsMenuWidget::NativeDestruct()
+{
+    Super::NativeDestruct();
+    ClearSlotsWidgets();
+}
+
 void UAttachmentsMenuWidget::UpdateMenu()
 {
     if (!panelTemplate || !slotButtonTemplate)
         return;
 
     // Clear containers at start
-    slotsList->ClearChildren();
+    ClearSlotsWidgets();
     panelsContainer->ClearChildren();
     _buttonToPanelMap.Empty();
 
     for (FAttachmentSlot &activeSlot : attachmentsComponentRef->GetActiveSlots())
     {
         FText _label = FText::FromName(activeSlot.SlotName);
+        FName _componentName = FName(*(activeSlot.SlotName.ToString() + TEXT("_Widget")));
 
         UAttachmentsMenuButton *newSlotButton = NewObject<UAttachmentsMenuButton>(this, slotButtonTemplate);
         UAttachmentsPanel *newPanel = NewObject<UAttachmentsPanel>(this, panelTemplate);
@@ -34,16 +42,24 @@ void UAttachmentsMenuWidget::UpdateMenu()
             continue;
 
         newSlotButton->buttonLabelText = _label;
+        /*Populate widgets on weapon mesh*/
+        UWidgetComponent *slotWidget =
+            NewObject<UWidgetComponent>(attachmentsComponentRef->GetOwner(), UWidgetComponent::StaticClass(), _componentName);
+        slotWidget->AttachToComponent(activeSlot.parent, FAttachmentTransformRules::SnapToTargetIncludingScale, activeSlot.SocketName);
+        slotWidget->SetWidgetSpace(EWidgetSpace::Screen);
+        slotWidget->SetWidget(newSlotButton);
+        slotWidget->SetDrawAtDesiredSize(true);
+        slotWidget->SetPivot(FVector2D(1, 1));
+        slotWidget->RegisterComponent();
+        slotWidgets.AddUnique(slotWidget);
+
         newPanel->panelLabel_Text = _label;
         newPanel->slotData = activeSlot;
         newPanel->SetVisibility(ESlateVisibility::Collapsed);
-
-        slotsList->AddChild(newSlotButton);
         panelsContainer->AddChild(newPanel);
 
         newSlotButton->OnClick.AddDynamic(this, &ThisClass::TogglePanel);
         newPanel->OnModuleInstalled.AddDynamic(this, &ThisClass::UpdateMenu);
-
         _buttonToPanelMap.Add(newSlotButton, newPanel);
     }
 }
@@ -72,4 +88,11 @@ void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)
     currentActivePanel->SetAttachmentsManager(attachmentsComponentRef);
     currentActivePanel->UpdatePanel();
     currentActivePanel->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UAttachmentsMenuWidget::ClearSlotsWidgets()
+{
+    for (UWidgetComponent *slotWidget : slotWidgets)
+        slotWidget->DestroyComponent(true);
+    slotWidgets.Empty();
 }

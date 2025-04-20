@@ -44,7 +44,7 @@ protected:
     TObjectPtr<class UVerticalBox> attachmentsList;
 
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)
-    TSubclassOf<class UAttachmentsMenuButton> slotButtonTemplate;
+    TSubclassOf<class UAttachmentsMenuButton> attachmentButtonTemplate;
 
 protected:
     UFUNCTION()

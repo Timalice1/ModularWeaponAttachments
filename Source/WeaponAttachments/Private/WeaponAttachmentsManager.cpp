@@ -58,7 +58,7 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     if (_activeAttachments.FindByPredicate([moduleData](const UAttachmentModuleComponent *activeModule)
                                            { return activeModule->moduleData == moduleData; }))
     { // Remove and install default if truing to install same module on slot
-        //RemoveModule(SlotName);
+        // RemoveModule(SlotName);
         InstallDefault(*_targetSlot);
         return;
     }
@@ -148,16 +148,17 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
 
 void UWeaponAttachmentsManager::InstallDefault(FAttachmentSlot &slot)
 {
+    /*Remove existing module first*/
+    RemoveModule(slot.SlotName);
+
     if (!AttachmentsTable || slot.DefaultAttachment == NAME_None)
         return;
+
     FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(slot.DefaultAttachment, FString());
     if (!defaultModule)
     {
         UE_LOG(LogTemp, Error, TEXT("%s: Requested module not found"), *slot.DefaultAttachment.ToString());
         return;
     }
-
-    /*Remove existing module first*/
-    RemoveModule(slot.SlotName);
     InstallModule(slot.SlotName, *defaultModule);
 }

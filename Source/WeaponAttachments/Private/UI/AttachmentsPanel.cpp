@@ -19,7 +19,7 @@ void UAttachmentsPanel::UpdatePanel()
         return;
     }
 
-    if (!IsValid(slotButtonTemplate))
+    if (!IsValid(attachmentButtonTemplate))
     {
         UE_LOG(LogTemp, Warning, TEXT("AttachmentPanel widget - missing reference to button template"));
         return;
@@ -30,7 +30,7 @@ void UAttachmentsPanel::UpdatePanel()
     TArray<FAttachmentModuleData> compatibleAttachments = attachmentsManagerRef->GetCompatibleAttachmentsByType(slotData.slotType);
     for (FAttachmentModuleData &attachmentModule : compatibleAttachments)
     {
-        UAttachmentsMenuButton *newAttachmentButton = NewObject<UAttachmentsMenuButton>(this, slotButtonTemplate);
+        UAttachmentsMenuButton *newAttachmentButton = NewObject<UAttachmentsMenuButton>(this, attachmentButtonTemplate);
         if (!newAttachmentButton)
         {
             UE_LOG(LogTemp, Warning, TEXT("Attachment panel widget - cannot instantiate new button"));
