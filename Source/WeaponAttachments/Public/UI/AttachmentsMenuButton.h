@@ -23,10 +23,10 @@ public:
     FOnClickedSignature OnClick;
 
 protected:
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     TObjectPtr<class UButton> button;
 
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     TObjectPtr<class UTextBlock> buttonLabel;
 
     UFUNCTION()

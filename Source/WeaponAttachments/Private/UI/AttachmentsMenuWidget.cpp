@@ -1,6 +1,6 @@
 #include "UI/AttachmentsMenuWidget.h"
-#include "UI/AttachmentsMenuButton.h"
 #include "UI/AttachmentsPanel.h"
+#include "UI/SlotButton.h"
 #include "Components/VerticalBox.h"
 #include "Components/Overlay.h"
 #include "Components/WidgetComponent.h"
@@ -30,13 +30,14 @@ void UAttachmentsMenuWidget::UpdateMenu()
     ClearSlotsWidgets();
     panelsContainer->ClearChildren();
     _buttonToPanelMap.Empty();
+    slotButtons.Empty();
 
     for (FAttachmentSlot &activeSlot : attachmentsComponentRef->GetActiveSlots())
     {
         FText _label = FText::FromName(activeSlot.SlotName);
         FName _componentName = FName(*(activeSlot.SlotName.ToString() + TEXT("_Widget")));
 
-        UAttachmentsMenuButton *newSlotButton = NewObject<UAttachmentsMenuButton>(this, slotButtonTemplate);
+        USlotButton *newSlotButton = NewObject<USlotButton>(this, slotButtonTemplate);
         UAttachmentsPanel *newPanel = NewObject<UAttachmentsPanel>(this, panelTemplate);
         if (!newSlotButton || !newPanel)
             continue;
@@ -49,9 +50,12 @@ void UAttachmentsMenuWidget::UpdateMenu()
         slotWidget->SetWidgetSpace(EWidgetSpace::Screen);
         slotWidget->SetWidget(newSlotButton);
         slotWidget->SetDrawAtDesiredSize(true);
-        slotWidget->SetPivot(FVector2D(1, 1));
+        slotWidget->SetPivot(newSlotButton->pivotPoint);
         slotWidget->RegisterComponent();
         slotWidgets.AddUnique(slotWidget);
+
+        newSlotButton->SetVisible(true);
+        slotButtons.Add(newSlotButton);
 
         newPanel->panelLabel_Text = _label;
         newPanel->slotData = activeSlot;
@@ -70,6 +74,12 @@ void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)
     if (currentActivePanel)
         currentActivePanel->SetVisibility(ESlateVisibility::Collapsed);
 
+    for (USlotButton *slot : slotButtons)
+    {
+        if (slot != slotButton)
+            slot->SetVisible(false);
+    }
+
     UAttachmentsPanel *targetPanel = *_buttonToPanelMap.Find(slotButton);
     if (!targetPanel)
     {
@@ -81,6 +91,7 @@ void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)
     if (targetPanel == currentActivePanel)
     {
         currentActivePanel = nullptr;
+        UpdateMenu();
         return;
     }
 

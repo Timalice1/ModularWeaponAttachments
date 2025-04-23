@@ -6,7 +6,7 @@ void UAttachmentsMenuButton::NativePreConstruct()
 {
     Super::NativePreConstruct();
     buttonLabel->SetText(buttonLabelText);
-
+    button->IsFocusable = false;
     button->OnClicked.AddDynamic(this, &ThisClass::OnButtonClicked);
 }
 

@@ -18,6 +18,8 @@ private:
     class UAttachmentsPanel *currentActivePanel = nullptr;
     UPROPERTY()
     TArray<TObjectPtr<class UWidgetComponent>> slotWidgets;
+    UPROPERTY()
+    TArray<TObjectPtr<class USlotButton>> slotButtons;
 
     virtual void ClearSlotsWidgets();
 
@@ -35,7 +37,7 @@ protected:
     TObjectPtr<class UOverlay> panelsContainer;
 
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)
-    TSubclassOf<class UAttachmentsMenuButton> slotButtonTemplate;
+    TSubclassOf<class USlotButton> slotButtonTemplate;
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)
     TSubclassOf<class UAttachmentsPanel> panelTemplate;
 
