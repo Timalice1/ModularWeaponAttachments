@@ -25,7 +25,7 @@ void UWeaponAttachmentsManager::AddSlot(FAttachmentSlot &slot, UMeshComponent *p
 {
     slot.parent = parent;
     _activeSlots.Add(slot);
-    InstallDefault(slot);
+    InstallDefault(slot.SlotName);
 }
 
 FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByName(const FName &SlotName)
@@ -58,13 +58,12 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     if (_activeAttachments.FindByPredicate([moduleData](const UAttachmentModuleComponent *activeModule)
                                            { return activeModule->moduleData == moduleData; }))
     { // Remove and install default if truing to install same module on slot
-        // RemoveModule(SlotName);
-        InstallDefault(*_targetSlot);
+        InstallDefault(_targetSlot->SlotName);
         return;
     }
     RemoveModule(SlotName);
-
-    UAttachmentModuleComponent *newComp = NewObject<UAttachmentModuleComponent>(GetOwner(), UAttachmentModuleComponent::StaticClass(), SlotName);
+    FName _componentName = FName(*(SlotName.ToString() + TEXT("_Component")));
+    UAttachmentModuleComponent *newComp = NewObject<UAttachmentModuleComponent>(GetOwner(), UAttachmentModuleComponent::StaticClass(), _componentName);
     if (!newComp)
         return;
 
@@ -88,32 +87,32 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
 
 void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 {
-    // Find requested slot
-    FAttachmentSlot *_targetSlot = FindSlotByName(SlotName);
-    if (!_targetSlot || !_targetSlot->CurrentModule)
+    // Find the target slot
+    FAttachmentSlot *TargetSlot = FindSlotByName(SlotName);
+    if (!TargetSlot || !TargetSlot->CurrentModule)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Requested slot [%s] does not exist, or already empty"), *SlotName.ToString());
+        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] not found or already empty"), *SlotName.ToString());
         return;
     }
 
     TArray<FAttachmentSlot> childSlots =
-        _activeSlots.FilterByPredicate([_targetSlot](const FAttachmentSlot &slot)
-                                       { return slot.parent == _targetSlot->CurrentModule; });
+        _activeSlots.FilterByPredicate([TargetSlot](const FAttachmentSlot &slot)
+                                       { return slot.parent == TargetSlot->CurrentModule; });
 
-    // Recursively remove child modules and slots
-    for (FAttachmentSlot &childSlot : childSlots)
+    // Recursively remove child modules
+    for (FAttachmentSlot &ChildSlot : childSlots)
     {
-        RemoveModule(childSlot.SlotName);
-        const int32 index = _activeSlots.IndexOfByKey(childSlot);
-        _activeSlots.RemoveAtSwap(index, 1, EAllowShrinking::No);
+        RemoveModule(ChildSlot.SlotName);
+        _activeSlots.Remove(ChildSlot);
     }
-    _activeSlots.Shrink();
 
-    _activeAttachments.Remove(_targetSlot->CurrentModule);
-    OnModuleRemoved.Broadcast(_targetSlot->CurrentModule, _targetSlot->CurrentModule->moduleData.ModuleType);
+    // Remove the target module
+    _activeAttachments.Remove(TargetSlot->CurrentModule);
+    OnModuleRemoved.Broadcast(TargetSlot->CurrentModule, TargetSlot->CurrentModule->moduleData.ModuleType);
 
-    _targetSlot->CurrentModule->DestroyComponent(true);
-    _targetSlot->CurrentModule = nullptr;
+    // Clean up the module and slot
+    TargetSlot->CurrentModule->DestroyComponent(true);
+    TargetSlot->CurrentModule = NULL;
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
@@ -146,19 +145,31 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
                                                         { return attachmentModule.ModuleType == moduleType; });
 }
 
-void UWeaponAttachmentsManager::InstallDefault(FAttachmentSlot &slot)
+void UWeaponAttachmentsManager::InstallDefault(const FName &slotName)
 {
     /*Remove existing module first*/
-    RemoveModule(slot.SlotName);
+    RemoveModule(slotName);
 
-    if (!AttachmentsTable || slot.DefaultAttachment == NAME_None)
+    /* Find target slot*/
+    FAttachmentSlot *targetSlot = FindSlotByName(slotName);
+    if (!targetSlot || !AttachmentsTable || targetSlot->DefaultAttachment == NAME_None)
         return;
 
-    FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(slot.DefaultAttachment, FString());
-    if (!defaultModule)
+    if (FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(targetSlot->DefaultAttachment, FString(TEXT("InstallDefault: Looking up default module"))))
     {
-        UE_LOG(LogTemp, Error, TEXT("%s: Requested module not found"), *slot.DefaultAttachment.ToString());
+        InstallModule(slotName, *defaultModule);
         return;
     }
-    InstallModule(slot.SlotName, *defaultModule);
+    UE_LOG(LogTemp, Error, TEXT("%s: Requested module not found"), *targetSlot->DefaultAttachment.ToString());
+}
+
+FAttachmentModuleData UWeaponAttachmentsManager::GetDefaultAttahcment(FName slot)
+{
+    FAttachmentSlot *_targetSlot = FindSlotByName(slot);
+    if (!_targetSlot)
+        return FAttachmentModuleData();
+    FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(_targetSlot->DefaultAttachment, FString());
+    if (defaultModule)
+        return *defaultModule;
+    return FAttachmentModuleData();
 }

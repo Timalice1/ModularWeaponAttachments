@@ -1,11 +1,7 @@
 #include "UI/AttachmentsMenuWidget.h"
-#include "UI/AttachmentsPanel.h"
-#include "UI/SlotButton.h"
-#include "Components/VerticalBox.h"
-#include "Components/Overlay.h"
+#include "UI/SlotWidget.h"
 #include "Components/WidgetComponent.h"
 #include "WeaponAttachmentsManager.h"
-#include "AttachmentSlot.h"
 
 void UAttachmentsMenuWidget::NativeConstruct()
 {
@@ -23,87 +19,57 @@ void UAttachmentsMenuWidget::NativeDestruct()
 
 void UAttachmentsMenuWidget::UpdateMenu()
 {
-    if (!panelTemplate || !slotButtonTemplate)
-        return;
-
     // Clear containers at start
     ClearSlotsWidgets();
-    panelsContainer->ClearChildren();
-    _buttonToPanelMap.Empty();
-    slotButtons.Empty();
 
     for (FAttachmentSlot &activeSlot : attachmentsComponentRef->GetActiveSlots())
     {
-        FText _label = FText::FromName(activeSlot.SlotName);
-        FName _componentName = FName(*(activeSlot.SlotName.ToString() + TEXT("_Widget")));
+        /*Instantiate new slot widget*/
+        TObjectPtr<USlotWidget> newSlotWidget = CreateWidget<USlotWidget>(this, SlotWidgetTemplate);
+        if (!newSlotWidget)
+            return;
 
-        USlotButton *newSlotButton = NewObject<USlotButton>(this, slotButtonTemplate);
-        UAttachmentsPanel *newPanel = NewObject<UAttachmentsPanel>(this, panelTemplate);
-        if (!newSlotButton || !newPanel)
-            continue;
+        newSlotWidget->SetVisible(true);
+        newSlotWidget->SetAttachmentsManager(attachmentsComponentRef);
+        newSlotWidget->SetSlotData(activeSlot);
+        activeSlotWidgets.Add(newSlotWidget);
 
-        newSlotButton->buttonLabelText = _label;
-        /*Populate widgets on weapon mesh*/
-        UWidgetComponent *slotWidget =
-            NewObject<UWidgetComponent>(attachmentsComponentRef->GetOwner(), UWidgetComponent::StaticClass(), _componentName);
-        slotWidget->AttachToComponent(activeSlot.parent, FAttachmentTransformRules::SnapToTargetIncludingScale, activeSlot.SocketName);
-        slotWidget->SetWidgetSpace(EWidgetSpace::Screen);
-        slotWidget->SetWidget(newSlotButton);
-        slotWidget->SetDrawAtDesiredSize(true);
-        slotWidget->SetPivot(newSlotButton->pivotPoint);
-        slotWidget->RegisterComponent();
-        slotWidgets.AddUnique(slotWidget);
+        /*Instantiate widget component*/
+        FName _componentName = FName(*(activeSlot.SlotName.ToString() + TEXT("_WidgetComponent")));
+        UWidgetComponent *slotWidget_Component = NewObject<UWidgetComponent>(
+            attachmentsComponentRef->GetOwner(),
+            UWidgetComponent::StaticClass(),
+            _componentName);
 
-        newSlotButton->SetVisible(true);
-        slotButtons.Add(newSlotButton);
+        if (slotWidget_Component)
+        {
+            slotWidget_Component->AttachToComponent(activeSlot.parent, FAttachmentTransformRules::SnapToTargetIncludingScale, activeSlot.SocketName);
+            slotWidget_Component->SetWidgetSpace(EWidgetSpace::Screen);
+            slotWidget_Component->SetWidget(newSlotWidget);
+            slotWidget_Component->SetDrawAtDesiredSize(true);
+            slotWidget_Component->SetPivot(newSlotWidget->pivotPoint);
+            slotWidget_Component->RegisterComponent();
+            slotWidget_Components.AddUnique(slotWidget_Component);
+        }
 
-        newPanel->panelLabel_Text = _label;
-        newPanel->slotData = activeSlot;
-        newPanel->SetVisibility(ESlateVisibility::Collapsed);
-        panelsContainer->AddChild(newPanel);
-
-        newSlotButton->OnClick.AddDynamic(this, &ThisClass::TogglePanel);
-        newPanel->OnModuleInstalled.AddDynamic(this, &ThisClass::UpdateMenu);
-        _buttonToPanelMap.Add(newSlotButton, newPanel);
+        newSlotWidget->OnOpened.AddDynamic(this, &ThisClass::OnMenuOpened);
+        newSlotWidget->OnSelectionChanged.AddDynamic(this, &ThisClass::OnModuleSelectionChanged);
     }
-}
-
-void UAttachmentsMenuWidget::TogglePanel(UAttachmentsMenuButton *slotButton)
-{
-    // Hide current active panel
-    if (currentActivePanel)
-        currentActivePanel->SetVisibility(ESlateVisibility::Collapsed);
-
-    for (USlotButton *slot : slotButtons)
-    {
-        if (slot != slotButton)
-            slot->SetVisible(false);
-    }
-
-    UAttachmentsPanel *targetPanel = *_buttonToPanelMap.Find(slotButton);
-    if (!targetPanel)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("AttachmentsMenuWidget::TooglePanel - Requested panel not found"));
-        return;
-    }
-
-    // Just close active panel if requested same panel
-    if (targetPanel == currentActivePanel)
-    {
-        currentActivePanel = nullptr;
-        UpdateMenu();
-        return;
-    }
-
-    currentActivePanel = targetPanel;
-    currentActivePanel->SetAttachmentsManager(attachmentsComponentRef);
-    currentActivePanel->UpdatePanel();
-    currentActivePanel->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UAttachmentsMenuWidget::ClearSlotsWidgets()
 {
-    for (UWidgetComponent *slotWidget : slotWidgets)
+    for (UWidgetComponent *slotWidget : slotWidget_Components)
         slotWidget->DestroyComponent(true);
-    slotWidgets.Empty();
+    slotWidget_Components.Empty();
+    activeSlotWidgets.Empty();
+}
+
+void UAttachmentsMenuWidget::OnMenuOpened(USlotWidget *slotWidget)
+{
+}
+
+void UAttachmentsMenuWidget::OnModuleSelectionChanged(FName Item)
+{
+    UpdateMenu();
 }

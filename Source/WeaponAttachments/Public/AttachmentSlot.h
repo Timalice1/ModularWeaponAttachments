@@ -23,7 +23,7 @@ struct FAttachmentSlot
     FName DefaultAttachment = FName("None");
 
     UPROPERTY()
-    class UAttachmentModuleComponent *CurrentModule;
+    TObjectPtr<class UAttachmentModuleComponent> CurrentModule;
 
     UPROPERTY()
     class UMeshComponent *parent;
