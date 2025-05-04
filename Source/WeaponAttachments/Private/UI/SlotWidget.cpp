@@ -1,13 +1,11 @@
 #include "UI/SlotWidget.h"
+#include "UI/DropDown.h"
 #include "Components/TextBlock.h"
-#include "Components/ComboBoxKey.h"
 #include "WeaponAttachmentsManager.h"
 
 void USlotWidget::NativePreConstruct()
 {
     Super::NativePreConstruct();
-    _optionFontColor = FLinearColor::White;
-    _contentFontColor = FLinearColor::White;
 }
 
 void USlotWidget::NativeConstruct()
@@ -15,26 +13,43 @@ void USlotWidget::NativeConstruct()
     Super::NativeConstruct();
     if (!attachmentsManager)
         return;
-    compatibleAttachments = attachmentsManager->GetCompatibleAttachmentsByType(slotData.slotType);
+    UComboBoxKey *comboBox = modulesList->GetComboBox();
+    if (!comboBox)
+        return;
 
-    modulesList->ClearOptions();
-    modulesList->AddOption(FName("Empty"));
-    modulesList->SetSelectedOption(FName("Empty"));
+    compatibleAttachments = attachmentsManager->GetCompatibleAttachmentsByType(slotData.slotType);
+    compatibleAttachments = compatibleAttachments.FilterByPredicate(
+        [&](const FAttachmentModuleData &compatibleItem)
+        {
+            /* Filter compatible attachments by already installed*/
+            const auto activeAttachments = attachmentsManager->GetActiveAttachmentsByType(slotData.slotType);
+            return !activeAttachments.ContainsByPredicate(
+                [&](const UAttachmentModuleComponent *activeItem)
+                {
+                    return activeItem->moduleData == compatibleItem &&
+                           activeItem != slotData.CurrentModule;
+                });
+        });
+
+    comboBox->ClearOptions();
+    comboBox->AddOption(FName("Empty"));
+    comboBox->SetSelectedOption(FName("Empty"));
 
     FAttachmentModuleData defaultModule = attachmentsManager->GetDefaultAttahcment(slotData.SlotName);
     for (FAttachmentModuleData &moduleData : compatibleAttachments)
     {
         if (moduleData != defaultModule)
-            modulesList->AddOption(moduleData.DisplayName);
+            comboBox->AddOption(moduleData.DisplayName);
     }
 
     if (UAttachmentModuleComponent *currentModule = slotData.CurrentModule)
     {
         if (currentModule->moduleData != defaultModule)
-            modulesList->SetSelectedOption(currentModule->moduleData.DisplayName);
+            comboBox->SetSelectedOption(currentModule->moduleData.DisplayName);
     }
 
-    modulesList->OnOpening.AddDynamic(this, &ThisClass::HandleOpened);
+    modulesList->OnOpening.AddDynamic(this, &ThisClass::HandleOpening);
+    modulesList->OnClosing.AddDynamic(this, &ThisClass::HandleClosing);
     modulesList->OnSelectionChanged.AddDynamic(this, &ThisClass::HandleSelectionChanged);
 }
 
@@ -42,24 +57,6 @@ void USlotWidget::SetVisible(bool bVisible)
 {
     ESlateVisibility newVis = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
     modulesList->SetVisibility(newVis);
-}
-
-UWidget *USlotWidget::GenerateContentWidget(FName Item)
-{
-    UTextBlock *textBlock = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
-    textBlock->SetFont(_contentFont);
-    textBlock->SetColorAndOpacity(_contentFontColor);
-    textBlock->SetText(FText::FromName(Item));
-    return textBlock;
-}
-
-UWidget *USlotWidget::GenerateItemWidget(FName Item)
-{
-    UTextBlock *textBlock = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
-    textBlock->SetFont(_optionFont);
-    textBlock->SetColorAndOpacity(_optionFontColor);
-    textBlock->SetText(FText::FromName(Item));
-    return textBlock;
 }
 
 void USlotWidget::SetAttachmentsManager(UWeaponAttachmentsManager *inManager)
@@ -70,11 +67,6 @@ void USlotWidget::SetAttachmentsManager(UWeaponAttachmentsManager *inManager)
 void USlotWidget::SetSlotData(FAttachmentSlot inSlotData)
 {
     slotData = inSlotData;
-}
-
-void USlotWidget::HandleOpened()
-{
-    OnOpened.Broadcast(this);
 }
 
 void USlotWidget::HandleSelectionChanged(FName SelectedItem, ESelectInfo::Type SelectionType)
@@ -94,4 +86,14 @@ void USlotWidget::HandleSelectionChanged(FName SelectedItem, ESelectInfo::Type S
 
     attachmentsManager->InstallModule(slotData.SlotName, *targetModule);
     OnSelectionChanged.Broadcast(SelectedItem);
+}
+
+void USlotWidget::HandleOpening()
+{
+    OnOpened.Broadcast(this);
+}
+
+void USlotWidget::HandleClosing()
+{
+    OnClosed.Broadcast();
 }

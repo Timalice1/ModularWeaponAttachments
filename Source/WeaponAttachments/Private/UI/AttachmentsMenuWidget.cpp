@@ -53,6 +53,7 @@ void UAttachmentsMenuWidget::UpdateMenu()
         }
 
         newSlotWidget->OnOpened.AddDynamic(this, &ThisClass::OnMenuOpened);
+        newSlotWidget->OnClosed.AddDynamic(this, &ThisClass::UpdateMenu);
         newSlotWidget->OnSelectionChanged.AddDynamic(this, &ThisClass::OnModuleSelectionChanged);
     }
 }
@@ -67,6 +68,11 @@ void UAttachmentsMenuWidget::ClearSlotsWidgets()
 
 void UAttachmentsMenuWidget::OnMenuOpened(USlotWidget *slotWidget)
 {
+    for(USlotWidget* activeSlot : activeSlotWidgets)
+    {
+        if(activeSlot!=slotWidget)
+            activeSlot->SetVisible(false);
+    }
 }
 
 void UAttachmentsMenuWidget::OnModuleSelectionChanged(FName Item)

@@ -5,27 +5,29 @@
 #include "AttachmentSlot.h"
 #include "SlotWidget.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOpenedEvent, class USlotWidget *, slotWidget);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectionChangedEvent, FName, Item);
-
 UCLASS()
 class WEAPONATTACHMENTS_API USlotWidget : public UUserWidget
 {
     GENERATED_BODY()
+public:
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOpenedEvent, class USlotWidget *, slotWidget);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectionChangedEvent, FName, Item);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnClosingEvent);
 
+private:
     UPROPERTY()
     TObjectPtr<class UWeaponAttachmentsManager> attachmentsManager;
 
-    /**
-     * @todo Replace with FName
-     */
     FAttachmentSlot slotData;
     TArray<struct FAttachmentModuleData> compatibleAttachments;
 
     UFUNCTION()
-    void HandleOpened();
-    UFUNCTION()
     void HandleSelectionChanged(FName SelectedItem, ESelectInfo::Type SelectionType);
+
+    UFUNCTION()
+    virtual void HandleOpening();
+    UFUNCTION()
+    virtual void HandleClosing();
 
 public:
     virtual void NativePreConstruct() override;
@@ -39,6 +41,8 @@ public:
     UPROPERTY(BlueprintCallable, Category = SlotWidget)
     FOnOpenedEvent OnOpened;
     UPROPERTY(BlueprintCallable, Category = SlotWidget)
+    FOnClosingEvent OnClosed;
+    UPROPERTY(BlueprintCallable, Category = SlotWidget)
     FOnSelectionChangedEvent OnSelectionChanged;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = SlotWidget)
@@ -47,23 +51,6 @@ public:
 protected: // Widgets
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     TObjectPtr<class UImage> slotMarker;
-    UPROPERTY(meta = (BindWidget))
-    TObjectPtr<class UComboBoxKey> modulesList;
-
-protected: // Styling
-    UPROPERTY(EditDefaultsOnly, Category = "ComboBoxKey|Style|Content", meta = (DisplayName = "Font"))
-    FSlateFontInfo _contentFont;
-    UPROPERTY(EditDefaultsOnly, Category = "ComboBoxKey|Style|Content", meta = (DisplayName = "FontColor"))
-    FSlateColor _contentFontColor;
-
-    UPROPERTY(EditDefaultsOnly, Category = "ComboBoxKey|Style|Option", meta = (DisplayName = "Font"))
-    FSlateFontInfo _optionFont;
-    UPROPERTY(EditDefaultsOnly, Category = "ComboBoxKey|Style|Option", meta = (DisplayName = "FontColor"))
-    FSlateColor _optionFontColor;
-
-protected:
-    UFUNCTION(BlueprintCallable, Category = SlotWidget)
-    UWidget *GenerateContentWidget(FName Item);
-    UFUNCTION(BlueprintCallable, Category = SlotWidget)
-    UWidget *GenerateItemWidget(FName Item);
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    TObjectPtr<class UDropDown> modulesList;
 };
