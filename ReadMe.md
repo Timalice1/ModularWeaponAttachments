@@ -4,7 +4,6 @@
 - Create new _DataTable_, derived from `FAttachmetnModuleData` structure.
 - Inside weapon class, add Weapon Attachments Manager (`UWeaponAttachmetnsManager`) actor component.
 - On weapon constructor, make sure to call `SetBaseWeaponMeshComponent` from attachmetns manager component. 
-- In attachment manager, set reference to attachments DataTable. 
 
 - **WeaponAttachmentsManager**
     - Actor component, that can be added to the weapon class. Both in c++ and BP
@@ -22,7 +21,7 @@
 
 - **Attachment slots:**
     - `SlotName` - slot display name. Make sure it's unique, since also it uses to asses to slots.
-    - `SocketName` - socket name from the weapon or attachment mesh. Defines slot location and where new module needs to be attached. *!!Make sure its the same name as socket name on the mesh!!*.
+    - `SocketName` - socket name from the weapon or attachment mesh. Defines slot location and where new module needs to be attached. *_Make sure its the same name as socket name on the mesh_*.
     - `SlotType` - defines attachment types that can be installed in this slot. 
 - **AttachmentModuleData:**
     - `Display name`: display name for this module. Currently used for UI.

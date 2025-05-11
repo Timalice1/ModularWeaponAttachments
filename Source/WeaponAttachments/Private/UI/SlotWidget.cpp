@@ -24,7 +24,7 @@ void USlotWidget::NativeConstruct()
             /* Filter compatible attachments by already installed*/
             const auto activeAttachments = attachmentsManager->GetActiveAttachmentsByType(slotData.slotType);
             return !activeAttachments.ContainsByPredicate(
-                [&](const UAttachmentModuleComponent *activeItem)
+                [&](const AAttachmentModule *activeItem)
                 {
                     return activeItem->moduleData == compatibleItem &&
                            activeItem != slotData.CurrentModule;
@@ -42,7 +42,7 @@ void USlotWidget::NativeConstruct()
             comboBox->AddOption(moduleData.DisplayName);
     }
 
-    if (UAttachmentModuleComponent *currentModule = slotData.CurrentModule)
+    if (AAttachmentModule *currentModule = slotData.CurrentModule)
     {
         if (currentModule->moduleData != defaultModule)
             comboBox->SetSelectedOption(currentModule->moduleData.DisplayName);

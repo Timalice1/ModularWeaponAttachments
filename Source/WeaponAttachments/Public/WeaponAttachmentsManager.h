@@ -7,8 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponAttachmentsManager.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnModuleInstalledEvent, class UAttachmentModuleComponent *, ModuleComponent, uint8, ModuleType);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnModuleRemovedEvent, class UAttachmentModuleComponent *, ModuleComponent, uint8, ModuleType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnModuleInstalledEvent, class AAttachmentModule *, module);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnModuleRemovedEvent, class AAttachmentModule *, module);
 
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
@@ -33,11 +33,11 @@ public:
     UFUNCTION(BlueprintCallable)
     TArray<FAttachmentSlot> GetActiveSlots() { return _activeSlots; };
     UFUNCTION(BlueprintCallable)
-    TArray<class UAttachmentModuleComponent *> GetActiveAttachments() { return _activeAttachments; };
-    TArray<class UAttachmentModuleComponent *> GetActiveAttachmentsByType(uint8 type)
+    TArray<class AAttachmentModule *> GetActiveAttachments() { return _activeModules; };
+    TArray<class AAttachmentModule *> GetActiveAttachmentsByType(uint8 type)
     {
-        return _activeAttachments.FilterByPredicate([type](const UAttachmentModuleComponent *attachment)
-                                                    { return attachment->moduleData.ModuleType == type; });
+        return _activeModules.FilterByPredicate([type](const AAttachmentModule *attachment)
+                                                { return attachment->moduleData.ModuleType == type; });
     };
 
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
@@ -93,7 +93,8 @@ protected:
 private:
     /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;
+
     /* Currently used attachment modules on the weapon*/
     UPROPERTY()
-    TArray<TObjectPtr<class UAttachmentModuleComponent>> _activeAttachments;
+    TArray<TObjectPtr<class AAttachmentModule>> _activeModules;
 };

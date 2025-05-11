@@ -55,34 +55,42 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     }
 
     // Remove existing module and child slots before adding new one
-    if (_activeAttachments.FindByPredicate([moduleData](const UAttachmentModuleComponent *activeModule)
+    if (_activeModules.ContainsByPredicate([moduleData](const AAttachmentModule *activeModule)
                                            { return activeModule->moduleData == moduleData; }))
     { // Remove and install default if truing to install same module on slot
-        InstallDefault(_targetSlot->SlotName);
+        InstallDefault(SlotName);
         return;
     }
     RemoveModule(SlotName);
-    FName _componentName = FName(*(SlotName.ToString() + TEXT("_Component")));
-    UAttachmentModuleComponent *newComp = NewObject<UAttachmentModuleComponent>(GetOwner(), UAttachmentModuleComponent::StaticClass(), _componentName);
-    if (!newComp)
+
+    TSubclassOf<AAttachmentModule> moduleClass =
+        moduleData.bVisualOnly
+            ? TSubclassOf<AAttachmentModule>(AAttachmentModule_VisualOnly::StaticClass())
+            : moduleData.attachmentModuleActorClass;
+
+    TObjectPtr<AAttachmentModule> moduleInstance = GetWorld()->SpawnActor<AAttachmentModule>(moduleClass);
+    if (!moduleInstance)
         return;
 
-    newComp->AttachToComponent(_targetSlot->parent, FAttachmentTransformRules::SnapToTargetIncludingScale, _targetSlot->SocketName);
-    newComp->SetStaticMesh(moduleData.Mesh);
-    newComp->SetCollisionProfileName("NoCollision");
-    newComp->moduleData = moduleData;
-    newComp->RegisterComponent();
-    _targetSlot->CurrentModule = newComp;
-    _activeAttachments.Add(newComp);
+    if (moduleData.bVisualOnly)
+    {
+        if (AAttachmentModule_VisualOnly *visualModule = Cast<AAttachmentModule_VisualOnly>(moduleInstance))
+            visualModule->SetMesh(moduleData.Mesh);
+    }
+    if (_targetSlot->parent)
+        moduleInstance->AttachToComponent(_targetSlot->parent, FAttachmentTransformRules::SnapToTargetIncludingScale, _targetSlot->SocketName);
+    moduleInstance->moduleData = moduleData;
+    _targetSlot->CurrentModule = moduleInstance;
+    _activeModules.Add(moduleInstance);
 
     // Add child slots to global active slots list
     if (!moduleData.childSlots.IsEmpty())
     {
         for (FAttachmentSlot &slot : moduleData.childSlots.Array())
-            AddSlot(slot, newComp);
+            AddSlot(slot, moduleInstance->GetAttachmentModuleParent());
     }
 
-    OnModuleInstalled.Broadcast(newComp, moduleData.ModuleType);
+    OnModuleInstalled.Broadcast(moduleInstance);
 }
 
 void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
@@ -97,7 +105,7 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 
     TArray<FAttachmentSlot> childSlots =
         _activeSlots.FilterByPredicate([TargetSlot](const FAttachmentSlot &slot)
-                                       { return slot.parent == TargetSlot->CurrentModule; });
+                                       { return slot.parent == TargetSlot->CurrentModule->GetAttachmentModuleParent(); });
 
     // Recursively remove child modules
     for (FAttachmentSlot &ChildSlot : childSlots)
@@ -107,12 +115,12 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     }
 
     // Remove the target module
-    _activeAttachments.Remove(TargetSlot->CurrentModule);
-    OnModuleRemoved.Broadcast(TargetSlot->CurrentModule, TargetSlot->CurrentModule->moduleData.ModuleType);
+    _activeModules.Remove(TargetSlot->CurrentModule);
+    OnModuleRemoved.Broadcast(TargetSlot->CurrentModule);
 
-    // Clean up the module and slot
-    TargetSlot->CurrentModule->DestroyComponent(true);
-    TargetSlot->CurrentModule = NULL;
+    // Clean up the module and slotF
+    TargetSlot->CurrentModule->Destroy();
+    TargetSlot->CurrentModule = nullptr;
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
