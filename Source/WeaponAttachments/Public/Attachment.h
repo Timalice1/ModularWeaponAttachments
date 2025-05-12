@@ -33,7 +33,6 @@ struct FAttachmentModuleData : public FTableRowBase
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig)
     bool bVisualOnly = true;
 
-    /* @todo Remove and replace with AAttachmnentModule subclass*/
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig,
               meta = (EditConditionHides, EditCondition = "bVisualOnly"))
     class UStaticMesh *Mesh;
@@ -53,7 +52,7 @@ struct FAttachmentModuleData : public FTableRowBase
     {
         return GetTypeHash(Other.DisplayName);
     }
-    
+
     inline bool operator==(const FAttachmentModuleData &Other) const
     {
         return DisplayName == Other.DisplayName;
@@ -74,7 +73,7 @@ public:
     FAttachmentModuleData moduleData;
 
     UFUNCTION(BlueprintNativeEvent, Category = AttachmentModule)
-    class UMeshComponent *GetAttachmentModuleParent() const;
+    class UMeshComponent *GetModuleMesh() const;
 };
 
 /**
@@ -94,5 +93,5 @@ public:
     void SetMesh(class UStaticMesh *mesh);
 
 private:
-    virtual class UMeshComponent *GetAttachmentModuleParent_Implementation() const override;
+    virtual class UMeshComponent *GetModuleMesh_Implementation() const override;
 };

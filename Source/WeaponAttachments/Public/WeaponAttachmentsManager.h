@@ -42,6 +42,7 @@ public:
 
     TArray<FAttachmentModuleData> GetCompatibleAttachments();
     TArray<FAttachmentModuleData> GetCompatibleAttachmentsByType(uint8 moduleType);
+    TArray<FAttachmentModuleData> GetCompatibleAttachmentsForSlot(const FName& slotName);
 
     UFUNCTION()
     FAttachmentModuleData GetDefaultAttahcment(FName slot);
@@ -72,7 +73,7 @@ public:
     virtual void RemoveModule(const FName &SlotName = FName("ModuleSlot"));
 
 protected:
-    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager)
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentsManager, meta = (RequiredAssetDataType = "FAttachmentModuleData"))
     TObjectPtr<class UDataTable> AttachmentsTable;
 
     /* Default weapon attachment slots (persistant)*/

@@ -63,20 +63,27 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     }
     RemoveModule(SlotName);
 
+    /*If its a visual only module, spawn internal visual-only subclass of AttachmentModule*/
     TSubclassOf<AAttachmentModule> moduleClass =
         moduleData.bVisualOnly
             ? TSubclassOf<AAttachmentModule>(AAttachmentModule_VisualOnly::StaticClass())
             : moduleData.attachmentModuleActorClass;
 
-    TObjectPtr<AAttachmentModule> moduleInstance = GetWorld()->SpawnActor<AAttachmentModule>(moduleClass);
+    /*Spawn new module actor*/
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = GetOwner();
+    TObjectPtr<AAttachmentModule> moduleInstance = GetWorld()->SpawnActor<AAttachmentModule>(moduleClass, SpawnParams);
     if (!moduleInstance)
         return;
 
+    /*if that is visual-only module, setup their mesh*/
     if (moduleData.bVisualOnly)
     {
         if (AAttachmentModule_VisualOnly *visualModule = Cast<AAttachmentModule_VisualOnly>(moduleInstance))
             visualModule->SetMesh(moduleData.Mesh);
     }
+
+    /* attach new module actor to a target slot*/
     if (_targetSlot->parent)
         moduleInstance->AttachToComponent(_targetSlot->parent, FAttachmentTransformRules::SnapToTargetIncludingScale, _targetSlot->SocketName);
     moduleInstance->moduleData = moduleData;
@@ -87,9 +94,10 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     if (!moduleData.childSlots.IsEmpty())
     {
         for (FAttachmentSlot &slot : moduleData.childSlots.Array())
-            AddSlot(slot, moduleInstance->GetAttachmentModuleParent());
+            AddSlot(slot, moduleInstance->GetModuleMesh());
     }
 
+    /*Callback (assigns on weapon class)*/
     OnModuleInstalled.Broadcast(moduleInstance);
 }
 
@@ -105,7 +113,7 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 
     TArray<FAttachmentSlot> childSlots =
         _activeSlots.FilterByPredicate([TargetSlot](const FAttachmentSlot &slot)
-                                       { return slot.parent == TargetSlot->CurrentModule->GetAttachmentModuleParent(); });
+                                       { return slot.parent == TargetSlot->CurrentModule->GetModuleMesh(); });
 
     // Recursively remove child modules
     for (FAttachmentSlot &ChildSlot : childSlots)
@@ -151,6 +159,30 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
 {
     return GetCompatibleAttachments().FilterByPredicate([moduleType](const FAttachmentModuleData &attachmentModule)
                                                         { return attachmentModule.ModuleType == moduleType; });
+}
+
+TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachmentsForSlot(const FName &slotName)
+{
+    FAttachmentSlot *_targetSlot = FindSlotByName(slotName);
+    if (!_targetSlot)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] not found"), *slotName.ToString());
+        return TArray<FAttachmentModuleData>();
+    }
+
+    /* Find compatible attachments by slot type, if slot attachment list was empty*/
+    if (_targetSlot->compatibleAttachments.IsEmpty())
+        return GetCompatibleAttachmentsByType(_targetSlot->slotType);
+
+    TArray<FAttachmentModuleData> outRows;
+    for (const FName &rowName : _targetSlot->compatibleAttachments)
+    {
+        FAttachmentModuleData *rowFound = AttachmentsTable->FindRow<FAttachmentModuleData>(rowName, FString());
+        if (rowFound)
+            outRows.Add(*rowFound);
+    }
+
+    return outRows;
 }
 
 void UWeaponAttachmentsManager::InstallDefault(const FName &slotName)

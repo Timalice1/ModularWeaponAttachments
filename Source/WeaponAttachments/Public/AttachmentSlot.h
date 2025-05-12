@@ -19,8 +19,13 @@ struct FAttachmentSlot
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     uint8 slotType;
 
+    /*Default attachment row name*/
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     FName DefaultAttachment = FName("None");
+
+    /* Attachments data table row names */
+    UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
+    TSet<FName> compatibleAttachments;
 
     UPROPERTY()
     TObjectPtr<class AAttachmentModule> CurrentModule;

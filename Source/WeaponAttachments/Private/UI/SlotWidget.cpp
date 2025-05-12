@@ -17,12 +17,13 @@ void USlotWidget::NativeConstruct()
     if (!comboBox)
         return;
 
-    compatibleAttachments = attachmentsManager->GetCompatibleAttachmentsByType(slotData.slotType);
+    compatibleAttachments = attachmentsManager->GetCompatibleAttachmentsForSlot(slotData.SlotName);
+
+    /* Filter compatible attachments by already installed*/
+    const auto activeAttachments = attachmentsManager->GetActiveAttachmentsByType(slotData.slotType);
     compatibleAttachments = compatibleAttachments.FilterByPredicate(
         [&](const FAttachmentModuleData &compatibleItem)
         {
-            /* Filter compatible attachments by already installed*/
-            const auto activeAttachments = attachmentsManager->GetActiveAttachmentsByType(slotData.slotType);
             return !activeAttachments.ContainsByPredicate(
                 [&](const AAttachmentModule *activeItem)
                 {

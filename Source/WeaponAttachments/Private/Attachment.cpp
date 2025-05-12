@@ -1,6 +1,6 @@
 #include "Attachment.h"
 
-UMeshComponent *AAttachmentModule::GetAttachmentModuleParent_Implementation() const
+UMeshComponent *AAttachmentModule::GetModuleMesh_Implementation() const
 {
     return nullptr;
 }
@@ -11,7 +11,7 @@ AAttachmentModule_VisualOnly::AAttachmentModule_VisualOnly()
     staticMeshComponent->SetCollisionProfileName("NoCollision");
 }
 
-UMeshComponent *AAttachmentModule_VisualOnly::GetAttachmentModuleParent_Implementation() const
+UMeshComponent *AAttachmentModule_VisualOnly::GetModuleMesh_Implementation() const
 {
     return staticMeshComponent;
 }
