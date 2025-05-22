@@ -4,47 +4,40 @@
 #include "AttachmentSlot.h"
 #include "Attachment.generated.h"
 
-/**
- * Struct data for weapon stats modifying
- */
-USTRUCT(BlueprintType)
-struct FModifier
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditDefaultsOnly)
-    TMap<FName, float> paramOverride;
-    UPROPERTY(EditDefaultsOnly)
-    TMap<FName, TSoftObjectPtr<UObject>> assetOverride;
-};
-
-/**
- * Generic attachment properties, edited in DataTable
- */
+/// @brief Attachment module configuration struct, edited in DataTable
 USTRUCT()
 struct FAttachmentModuleData : public FTableRowBase
 {
     GENERATED_BODY()
 
+    /// @brief Display name of module, using for dispaying and accesing to this module
     UPROPERTY(EditDefaultsOnly, Category = ModuleConfig)
     FName DisplayName;
 
-    /* Detect if this only visual module, without any own logic*/
+    /// @brief Detect if this only visual module, without any own logic
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig)
     bool bVisualOnly = true;
 
+    /// @brief Mesh for a visual module only
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig,
               meta = (EditConditionHides, EditCondition = "bVisualOnly"))
     class UStaticMesh *Mesh;
 
+    /// @brief Attachment module class reference
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig,
               meta = (EditConditionHides, EditCondition = "!bVisualOnly"))
     TSubclassOf<class AAttachmentModule> attachmentModuleActorClass;
 
+    /**
+     * @brief Attachment module type
+     *        Works in pair with a slot type (see: FAttachmentSlot::slotType)
+     */
     UPROPERTY(EditDefaultsOnly, Category = ModuleConfig)
     uint8 ModuleType;
 
-    /*Child attachment slots*/
+    /** @brief Child attachment slots
+     *          Leave it empty if module didnt have any childs
+     */
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig)
     TSet<FAttachmentSlot> childSlots;
 
@@ -59,10 +52,8 @@ struct FAttachmentModuleData : public FTableRowBase
     }
 };
 
-/**
- * Base class for a attachment modules
- * Minimum logic, leave this up to the end user
- */
+/// Base class for a attachment modules
+/// Minimum logic, leave this up to the end user
 UCLASS(Abstract)
 class WEAPONATTACHMENTS_API AAttachmentModule : public AActor
 {
@@ -70,15 +61,29 @@ class WEAPONATTACHMENTS_API AAttachmentModule : public AActor
 
 public:
     AAttachmentModule() {};
+
+    /// @brief Attachment module data property
     FAttachmentModuleData moduleData;
 
+    /// @return Module mesh component reference
     UFUNCTION(BlueprintNativeEvent, Category = AttachmentModule)
     class UMeshComponent *GetModuleMesh() const;
+
+    /**
+     * @brief
+     *      Activate/Deactivate current module
+     *      can be overrided both in c++ and Blueprints
+     *      In c++ override SetModuleActive_Implementation function
+     */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = AttachmentModule)
+    void SetModuleActive(bool IsActive);
+    void SetModuleActive_Implementation(bool IsActive) {};
 };
 
 /**
- * Internal attachment module component class
- * for visual representation only
+ * @brief
+ *      Internal attachment module component class
+ *      for visual representation only, internal usage
  */
 UCLASS(NotBlueprintable, NotBlueprintType)
 class WEAPONATTACHMENTS_API AAttachmentModule_VisualOnly : public AAttachmentModule

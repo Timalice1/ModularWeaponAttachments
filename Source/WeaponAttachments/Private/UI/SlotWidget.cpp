@@ -12,30 +12,23 @@ void USlotWidget::NativeConstruct()
 {
     Super::NativeConstruct();
     if (!attachmentsManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Widget [%s] has missing reference to attachments manager component"), *GetName());
         return;
+    }
+
     UComboBoxKey *comboBox = modulesList->GetComboBox();
     if (!comboBox)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[%s]: missing reference to UComboBoxKey in [%s]"), *GetName(), *modulesList->GetName());
         return;
-
-    compatibleAttachments = attachmentsManager->GetCompatibleAttachmentsForSlot(slotData.SlotName);
-
-    /* Filter compatible attachments by already installed*/
-    const auto activeAttachments = attachmentsManager->GetActiveAttachmentsByType(slotData.slotType);
-    compatibleAttachments = compatibleAttachments.FilterByPredicate(
-        [&](const FAttachmentModuleData &compatibleItem)
-        {
-            return !activeAttachments.ContainsByPredicate(
-                [&](const AAttachmentModule *activeItem)
-                {
-                    return activeItem->moduleData == compatibleItem &&
-                           activeItem != slotData.CurrentModule;
-                });
-        });
+    }
 
     comboBox->ClearOptions();
     comboBox->AddOption(FName("Empty"));
     comboBox->SetSelectedOption(FName("Empty"));
 
+    compatibleAttachments = attachmentsManager->GetAvailableAttachmentsForSlot(slotData.SlotName);
     FAttachmentModuleData defaultModule = attachmentsManager->GetDefaultAttahcment(slotData.SlotName);
     for (FAttachmentModuleData &moduleData : compatibleAttachments)
     {

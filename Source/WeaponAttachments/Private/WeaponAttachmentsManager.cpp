@@ -30,28 +30,24 @@ void UWeaponAttachmentsManager::AddSlot(FAttachmentSlot &slot, UMeshComponent *p
 
 FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByName(const FName &SlotName)
 {
-    FAttachmentSlot *_targetSlot =
-        _activeSlots.FindByPredicate([SlotName](const FAttachmentSlot &slot)
-                                     { return slot.SlotName == SlotName; });
-    return _targetSlot;
+    return _activeSlots.FindByPredicate([SlotName](const FAttachmentSlot &slot)
+                                        { return slot.SlotName == SlotName; });
 }
 
 FAttachmentSlot *UWeaponAttachmentsManager::FindSlotByType(const uint8 type)
 {
-    FAttachmentSlot *_targetSlot =
-        _activeSlots.FindByPredicate([type](const FAttachmentSlot &slot)
-                                     { return slot.slotType == type; });
-    return _targetSlot;
+    return _activeSlots.FindByPredicate([type](const FAttachmentSlot &slot)
+                                        { return slot.slotType == type; });
 }
 
-void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAttachmentModuleData &moduleData)
+bool UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAttachmentModuleData &moduleData)
 {
     // Get the required slot where attachment need to be installed
     FAttachmentSlot *_targetSlot = FindSlotByName(SlotName);
     if (!_targetSlot)
     {
         UE_LOG(LogTemp, Warning, TEXT("Requested slot [%s] does not exist"), *SlotName.ToString());
-        return;
+        return false;
     }
 
     // Remove existing module and child slots before adding new one
@@ -59,7 +55,7 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
                                            { return activeModule->moduleData == moduleData; }))
     { // Remove and install default if truing to install same module on slot
         InstallDefault(SlotName);
-        return;
+        return false;
     }
     RemoveModule(SlotName);
 
@@ -74,12 +70,12 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     SpawnParams.Owner = GetOwner();
     TObjectPtr<AAttachmentModule> moduleInstance = GetWorld()->SpawnActor<AAttachmentModule>(moduleClass, SpawnParams);
     if (!moduleInstance)
-        return;
+        return false;
 
     /*if that is visual-only module, setup their mesh*/
     if (moduleData.bVisualOnly)
     {
-        if (AAttachmentModule_VisualOnly *visualModule = Cast<AAttachmentModule_VisualOnly>(moduleInstance))
+        if (TObjectPtr<AAttachmentModule_VisualOnly> visualModule = Cast<AAttachmentModule_VisualOnly>(moduleInstance))
             visualModule->SetMesh(moduleData.Mesh);
     }
 
@@ -99,16 +95,17 @@ void UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
 
     /*Callback (assigns on weapon class)*/
     OnModuleInstalled.Broadcast(moduleInstance);
+    return true;
 }
 
-void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
+bool UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
 {
     // Find the target slot
     FAttachmentSlot *TargetSlot = FindSlotByName(SlotName);
     if (!TargetSlot || !TargetSlot->CurrentModule)
     {
         UE_LOG(LogTemp, Warning, TEXT("Slot [%s] not found or already empty"), *SlotName.ToString());
-        return;
+        return false;
     }
 
     TArray<FAttachmentSlot> childSlots =
@@ -129,6 +126,7 @@ void UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     // Clean up the module and slotF
     TargetSlot->CurrentModule->Destroy();
     TargetSlot->CurrentModule = nullptr;
+    return true;
 }
 
 TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachments()
@@ -149,7 +147,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
     for (const FName &rowName : compatibleAttachments)
     {
         FAttachmentModuleData *rowFound = AttachmentsTable->FindRow<FAttachmentModuleData>(rowName, FString());
-        if (rowFound)
+        if (rowFound) 
             outRows.Add(*rowFound);
     }
     return outRows;
@@ -185,6 +183,32 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
     return outRows;
 }
 
+TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetAvailableAttachmentsForSlot(const FName &slotName)
+{
+    FAttachmentSlot *_targetSlot = FindSlotByName(slotName);
+    if (!_targetSlot)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] does not exist"), *slotName.ToString());
+        return TArray<FAttachmentModuleData>();
+    }
+
+    TArray<FAttachmentModuleData> availableAttachments = GetCompatibleAttachmentsForSlot(slotName);
+    if (availableAttachments.IsEmpty())
+        return TArray<FAttachmentModuleData>();
+
+    availableAttachments = availableAttachments.FilterByPredicate(
+        [&](const FAttachmentModuleData &compatibleItem)
+        {
+            return !_activeModules.ContainsByPredicate(
+                [&](const AAttachmentModule *activeItem)
+                {
+                    return activeItem->moduleData == compatibleItem &&
+                           activeItem != _targetSlot->CurrentModule;
+                });
+        });
+    return availableAttachments;
+}
+
 void UWeaponAttachmentsManager::InstallDefault(const FName &slotName)
 {
     /*Remove existing module first*/
@@ -205,9 +229,18 @@ void UWeaponAttachmentsManager::InstallDefault(const FName &slotName)
 
 FAttachmentModuleData UWeaponAttachmentsManager::GetDefaultAttahcment(FName slot)
 {
+    if (!AttachmentsTable)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[%s]: missing reference to attachments data table"), *GetOwner()->GetName());
+        return FAttachmentModuleData();
+    }
+
     FAttachmentSlot *_targetSlot = FindSlotByName(slot);
     if (!_targetSlot)
-        return FAttachmentModuleData();
+    {
+         return FAttachmentModuleData();
+    }
+
     FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(_targetSlot->DefaultAttachment, FString());
     if (defaultModule)
         return *defaultModule;

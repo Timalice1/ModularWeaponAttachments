@@ -8,22 +8,24 @@ struct FAttachmentSlot
 {
     GENERATED_BODY()
 
-    /* Use for display name and accessing to slot*/
+    /// Use for display name and accessing to slot
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = AttachmentSlot)
     FName SlotName = FName("AttachmentSlot");
 
-    /* Named socket on the parent mesh, where module needs to be attached*/
+    /// Named socket on the parent mesh, where module needs to be attached
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = AttachmentSlot)
     FName SocketName;
 
+    /// Slot type value. Uses for filtering compatible attachments for this slot
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     uint8 slotType;
 
-    /*Default attachment row name*/
+    /// Default attachment module table row name
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     FName DefaultAttachment = FName("None");
 
-    /* Attachments data table row names */
+    /// List of compatible attachments row names for this slot
+    /// If this was empty, compatible modules will be sorted by their type
     UPROPERTY(EditDefaultsOnly, Category = AttachmentSlot)
     TSet<FName> compatibleAttachments;
 
@@ -31,7 +33,7 @@ struct FAttachmentSlot
     TObjectPtr<class AAttachmentModule> CurrentModule;
 
     UPROPERTY()
-    class UMeshComponent *parent;
+    TObjectPtr<class UMeshComponent> parent;
 
     friend uint32 GetTypeHash(const FAttachmentSlot &Other)
     {
