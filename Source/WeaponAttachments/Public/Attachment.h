@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "AttachmentSlot.h"
+#include "Engine/DataTable.h"
+#include "GameFramework/Actor.h"
+#include "PerksSystem/StatModifier.h"
 #include "Attachment.generated.h"
 
 /// @brief Attachment module configuration struct, edited in DataTable
@@ -21,7 +24,7 @@ struct FAttachmentModuleData : public FTableRowBase
     /// @brief Mesh for a visual module only
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig,
               meta = (EditConditionHides, EditCondition = "bVisualOnly"))
-    class UStaticMesh *Mesh;
+    TSoftObjectPtr<UStaticMesh> Mesh;
 
     /// @brief Attachment module class reference
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ModuleConfig,
@@ -34,6 +37,9 @@ struct FAttachmentModuleData : public FTableRowBase
      */
     UPROPERTY(EditDefaultsOnly, Category = ModuleConfig)
     uint8 ModuleType;
+
+    UPROPERTY(EditDefaultsOnly, Category = ModuleConfig)
+    FModifier StatModifiers;
 
     /** @brief Child attachment slots
      *          Leave it empty if module didnt have any childs
@@ -52,8 +58,10 @@ struct FAttachmentModuleData : public FTableRowBase
     }
 };
 
-/// Base class for a attachment modules
-/// Minimum logic, leave this up to the end user
+/*
+ * Base class for a attachment modules
+ * Minimum logic, leave this up to the end user
+ */
 UCLASS(Abstract)
 class WEAPONATTACHMENTS_API AAttachmentModule : public AActor
 {
@@ -69,6 +77,9 @@ public:
     UFUNCTION(BlueprintNativeEvent, Category = AttachmentModule)
     class UMeshComponent *GetModuleMesh() const;
 
+    UFUNCTION(BlueprintCallable, Category = AttachmentModule)
+    virtual FModifier GetModificators() const { return moduleData.StatModifiers; }
+
     /**
      * @brief
      *      Activate/Deactivate current module
@@ -81,9 +92,8 @@ public:
 };
 
 /**
- * @brief
- *      Internal attachment module component class
- *      for visual representation only, internal usage
+ * Internal attachment module component class
+ * for visual representation only, internal usage
  */
 UCLASS(NotBlueprintable, NotBlueprintType)
 class WEAPONATTACHMENTS_API AAttachmentModule_VisualOnly : public AAttachmentModule

@@ -49,8 +49,8 @@ public:
     FVector2D pivotPoint = FVector2D(.5, .5);
 
 protected: // Widgets
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UPROPERTY(BlueprintReadOnly, Category = SlotWidgetConfig, meta = (BindWidget))
     TObjectPtr<class UImage> slotMarker;
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UPROPERTY(BlueprintReadOnly, Category = SlotWidgetConfig, meta = (BindWidget))
     TObjectPtr<class UDropDown> modulesList;
 };

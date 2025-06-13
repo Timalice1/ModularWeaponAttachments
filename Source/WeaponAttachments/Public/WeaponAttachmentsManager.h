@@ -15,16 +15,20 @@ class WEAPONATTACHMENTS_API UWeaponAttachmentsManager : public UActorComponent
 {
     GENERATED_BODY()
 
+    UPROPERTY()
     TObjectPtr<class UMeshComponent> ownerMeshComponent;
 
-    /* Add a new slot*/
-    virtual void AddSlot(FAttachmentSlot &slot, class UMeshComponent *parent);
+    UPROPERTY()
+    TObjectPtr<class UStatModificationManager> _statsModificationManager = nullptr;
 
     UPROPERTY() /* Active attachment slots, includes child slots from attachments*/
     TArray<FAttachmentSlot> _activeSlots;
 
     UPROPERTY() /* Currently used attachment modules on the weapon*/
     TArray<TObjectPtr<class AAttachmentModule>> _activeModules;
+
+    /* Add a new slot*/
+    virtual void AddSlot(FAttachmentSlot &slot, class UMeshComponent *parent);
 
 protected: // Properties
     /// Attachment modules configuration data table

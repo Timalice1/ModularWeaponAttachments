@@ -1,4 +1,12 @@
 #include "WeaponAttachmentsManager.h"
+#include "Components/MeshComponent.h"
+#include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "Engine/StreamableManager.h"
+#include "Engine/AssetManager.h"
+#include "PerksSystem/StatModificationManager.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogAttachmentsManager, Log, All);
 
 UWeaponAttachmentsManager::UWeaponAttachmentsManager()
 {
@@ -12,13 +20,17 @@ void UWeaponAttachmentsManager::BeginPlay()
 
     if (!ownerMeshComponent)
     {
-        UE_LOG(LogTemp, Warning, TEXT("WeaponAttachmetnsManager - missing reference to owner mesh component\n"
-                                      "\tUse SetBaseWeaponMeshComponent() to do that"));
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("WeaponAttachmetnsManager - missing reference to owner mesh component\n"
+                                                    "\tUse SetBaseWeaponMeshComponent() to do that"));
         return;
     }
 
     for (FAttachmentSlot &slot : attachmentSlots)
         AddSlot(slot, ownerMeshComponent);
+
+    if (UStatModificationManager *modifiationsManager =
+            Cast<UStatModificationManager>(GetOwner()->FindComponentByClass(UStatModificationManager::StaticClass())))
+        _statsModificationManager = modifiationsManager;
 }
 
 void UWeaponAttachmentsManager::AddSlot(FAttachmentSlot &slot, UMeshComponent *parent)
@@ -46,7 +58,7 @@ bool UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     FAttachmentSlot *_targetSlot = FindSlotByName(SlotName);
     if (!_targetSlot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Requested slot [%s] does not exist"), *SlotName.ToString());
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("Requested slot [%s] does not exist"), *SlotName.ToString());
         return false;
     }
 
@@ -76,7 +88,20 @@ bool UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     if (moduleData.bVisualOnly)
     {
         if (TObjectPtr<AAttachmentModule_VisualOnly> visualModule = Cast<AAttachmentModule_VisualOnly>(moduleInstance))
-            visualModule->SetMesh(moduleData.Mesh);
+        {
+            FStreamableManager &Streamable = UAssetManager::GetStreamableManager();
+            Streamable.RequestAsyncLoad(
+                moduleData.Mesh.ToSoftObjectPath(),
+                FStreamableDelegate::CreateWeakLambda(
+                    this, [=]()
+                    {
+                        if (UStaticMesh* LoadedMesh = moduleData.Mesh.Get())
+                        {
+                                visualModule->SetMesh(LoadedMesh); 
+                        } }));
+        }
+        else
+            UE_LOG(LogAttachmentsManager, Warning, TEXT("Failed to load static mesh for visual module %s"), *moduleData.DisplayName.ToString());
     }
 
     /* attach new module actor to a target slot*/
@@ -85,6 +110,10 @@ bool UWeaponAttachmentsManager::InstallModule(const FName &SlotName, const FAtta
     moduleInstance->moduleData = moduleData;
     _targetSlot->CurrentModule = moduleInstance;
     _activeModules.Add(moduleInstance);
+
+    // Apply modifications from new module
+    if (_statsModificationManager)
+        _statsModificationManager->ApplyModificator(moduleData.DisplayName, moduleInstance->GetModificators());
 
     // Add child slots to global active slots list
     if (!moduleData.childSlots.IsEmpty())
@@ -104,15 +133,19 @@ bool UWeaponAttachmentsManager::RemoveModule(const FName &SlotName)
     FAttachmentSlot *TargetSlot = FindSlotByName(SlotName);
     if (!TargetSlot || !TargetSlot->CurrentModule)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] not found or already empty"), *SlotName.ToString());
+        UE_LOG(LogAttachmentsManager, Log, TEXT("Slot [%s] not found or already empty"), *SlotName.ToString());
         return false;
     }
 
+    // Remove modifications
+    if (_statsModificationManager)
+        _statsModificationManager->RemoveModificator(TargetSlot->CurrentModule->moduleData.DisplayName);
+
+    // Recursively remove child modules
     TArray<FAttachmentSlot> childSlots =
         _activeSlots.FilterByPredicate([TargetSlot](const FAttachmentSlot &slot)
                                        { return slot.parent == TargetSlot->CurrentModule->GetModuleMesh(); });
 
-    // Recursively remove child modules
     for (FAttachmentSlot &ChildSlot : childSlots)
     {
         RemoveModule(ChildSlot.SlotName);
@@ -133,13 +166,13 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
 {
     if (!IsValid(AttachmentsTable))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[%s-%s]: missing attachments data table property reference"), *GetOwner()->GetName(), *GetName());
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("[%s-%s]: missing attachments data table property reference"), *GetOwner()->GetName(), *GetName());
         return TArray<FAttachmentModuleData>();
     }
 
     if (compatibleAttachments.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[%s - %s]: compatible attachments list are empty"), *GetOwner()->GetName(), *GetName());
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("[%s - %s]: compatible attachments list are empty"), *GetOwner()->GetName(), *GetName());
         return TArray<FAttachmentModuleData>();
     }
 
@@ -147,7 +180,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
     for (const FName &rowName : compatibleAttachments)
     {
         FAttachmentModuleData *rowFound = AttachmentsTable->FindRow<FAttachmentModuleData>(rowName, FString());
-        if (rowFound) 
+        if (rowFound)
             outRows.Add(*rowFound);
     }
     return outRows;
@@ -164,7 +197,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetCompatibleAttachment
     FAttachmentSlot *_targetSlot = FindSlotByName(slotName);
     if (!_targetSlot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] not found"), *slotName.ToString());
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("Slot [%s] not found"), *slotName.ToString());
         return TArray<FAttachmentModuleData>();
     }
 
@@ -188,7 +221,7 @@ TArray<FAttachmentModuleData> UWeaponAttachmentsManager::GetAvailableAttachments
     FAttachmentSlot *_targetSlot = FindSlotByName(slotName);
     if (!_targetSlot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Slot [%s] does not exist"), *slotName.ToString());
+        UE_LOG(LogAttachmentsManager, Warning, TEXT("Slot [%s] does not exist"), *slotName.ToString());
         return TArray<FAttachmentModuleData>();
     }
 
@@ -224,21 +257,21 @@ void UWeaponAttachmentsManager::InstallDefault(const FName &slotName)
         InstallModule(slotName, *defaultModule);
         return;
     }
-    UE_LOG(LogTemp, Error, TEXT("%s: Requested module not found"), *targetSlot->DefaultAttachment.ToString());
+    UE_LOG(LogAttachmentsManager, Error, TEXT("%s: Requested module not found"), *targetSlot->DefaultAttachment.ToString());
 }
 
 FAttachmentModuleData UWeaponAttachmentsManager::GetDefaultAttahcment(FName slot)
 {
     if (!AttachmentsTable)
     {
-        UE_LOG(LogTemp, Error, TEXT("[%s]: missing reference to attachments data table"), *GetOwner()->GetName());
+        UE_LOG(LogAttachmentsManager, Error, TEXT("[%s]: missing reference to attachments data table"), *GetOwner()->GetName());
         return FAttachmentModuleData();
     }
 
     FAttachmentSlot *_targetSlot = FindSlotByName(slot);
     if (!_targetSlot)
     {
-         return FAttachmentModuleData();
+        return FAttachmentModuleData();
     }
 
     FAttachmentModuleData *defaultModule = AttachmentsTable->FindRow<FAttachmentModuleData>(_targetSlot->DefaultAttachment, FString());

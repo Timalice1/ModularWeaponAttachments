@@ -1,4 +1,5 @@
 #include "Attachment.h"
+#include "Components/StaticMeshComponent.h"
 
 UMeshComponent *AAttachmentModule::GetModuleMesh_Implementation() const
 {

@@ -1,11 +1,21 @@
 #include "UI/AttachmentsMenuWidget.h"
 #include "UI/SlotWidget.h"
+#include "GameFramework/Actor.h"
 #include "Components/WidgetComponent.h"
 #include "WeaponAttachmentsManager.h"
 
 void UAttachmentsMenuWidget::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    if (!OwnerActor)
+    {
+        UE_LOG(LogTemp, Error, TEXT("%s - missing owner actor reference"), *GetName());
+        return;
+    }
+
+    attachmentsComponentRef =
+        Cast<UWeaponAttachmentsManager>(OwnerActor->FindComponentByClass(UWeaponAttachmentsManager::StaticClass()));
     if (!attachmentsComponentRef)
         return;
     UpdateMenu();
@@ -68,9 +78,9 @@ void UAttachmentsMenuWidget::ClearSlotsWidgets()
 
 void UAttachmentsMenuWidget::OnMenuOpened(USlotWidget *slotWidget)
 {
-    for(USlotWidget* activeSlot : activeSlotWidgets)
+    for (USlotWidget *activeSlot : activeSlotWidgets)
     {
-        if(activeSlot!=slotWidget)
+        if (activeSlot != slotWidget)
             activeSlot->SetVisible(false);
     }
 }

@@ -10,6 +10,9 @@ class WEAPONATTACHMENTS_API UAttachmentsMenuWidget : public UUserWidget
     GENERATED_BODY()
 
 private:
+    UPROPERTY()
+    TObjectPtr<class AActor> OwnerActor = nullptr;
+
     UPROPERTY() /*Attachments manager reference*/
     TObjectPtr<class UWeaponAttachmentsManager> attachmentsComponentRef;
     UPROPERTY() /*Slot widget components instances array*/
@@ -26,8 +29,11 @@ public:
     UFUNCTION() /*Regenerate attachments menu and all widgets*/
     virtual void UpdateMenu();
 
-    UFUNCTION(BlueprintCallable)
-    void SetAttachmentsManager(class UWeaponAttachmentsManager *manager) { attachmentsComponentRef = manager; }
+    UFUNCTION(BlueprintCallable, Category = MenuConfig)
+    void SetOwnerActor(class AActor *inOwner) { OwnerActor = inOwner; }
+
+    UFUNCTION(BlueprintCallable, Category = MenuConfig)
+    class AActor *GetOwnerActor() { return OwnerActor; }
 
 protected:
     UPROPERTY(EditDefaultsOnly, Category = MenuConfig)

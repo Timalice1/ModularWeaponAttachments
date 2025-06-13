@@ -33,9 +33,9 @@ protected:
     virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent) override;
     virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent) override;
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = DropDown)
     UWidget *GenerateContentWidget(FName Item);
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = DropDown)
     UWidget *GenerateItemWidget(FName Item);
 
 public:

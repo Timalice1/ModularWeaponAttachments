@@ -1,4 +1,5 @@
 #include "UI/DropDown.h"
+#include "TimerManager.h"
 #include "Components/TextBlock.h"
 
 void UDropDown::NativePreConstruct()
