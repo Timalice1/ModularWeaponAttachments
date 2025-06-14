@@ -26,6 +26,18 @@ struct FParamModifier
     /// Modificator operation
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ParamModifier)
     EModifierOp ModificationType = EModifierOp::Percent;
+
+    UPROPERTY(EditDefaultsOnly, AdvancedDisplay, Category = ParamModifier, 
+        meta = (EditConditionHides, EditCondition = "ModificationType == EmodifierOp::Percent"))
+    bool bClampValue = false;
+
+    UPROPERTY(EditDefaultsOnly, AdvancedDisplay, Category = "ParamModifier|Clamp",
+              meta = (EditConditionHides, EditCondition = "bClampValue"))
+    float Min = 0.f;
+
+    UPROPERTY(EditDefaultsOnly, AdvancedDisplay, Category = "ParamModifier|Clamp",
+              meta = (EditConditionHides, EditCondition = "bClampValue"))
+    float Max = 0.f;
 };
 
 USTRUCT(BlueprintType)

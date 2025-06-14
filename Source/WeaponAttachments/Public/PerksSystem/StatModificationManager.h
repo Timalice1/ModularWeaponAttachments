@@ -28,15 +28,17 @@ private:
 
     UPROPERTY()
     TMap<FGameplayTag, float> _finalParameters;
-
-private:
-    virtual void EvaluateParameters();
-    virtual void OverrideAssets();
-    virtual void RecalculateModifications();
+    UPROPERTY()
+    TMap<FGameplayTag, UObject *> _finalAssets;
 
     virtual void MarkAsDirty(const FModifier &modifier);
     TSet<FGameplayTag> _dirtyParameters;
     TSet<FGameplayTag> _dirtyAssets;
+
+private:
+    virtual void RecalculateModifications();
+    virtual void EvaluateParameters();
+    virtual void OverrideAssets();
 
 public:
     virtual void BeginPlay() override;
@@ -50,11 +52,36 @@ public:
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     void RemoveModificator(const FName &ModificatorID);
 
+    /// Removes all modificator from owner
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     void RemoveAllModificators();
 
+    /// Returns all modified parameters
+    UFUNCTION(BlueprintCallable, Category = ModificationsManager)
+    TMap<FGameplayTag, float> GetModifiedParameters() const { return _finalParameters; }
+
+    /// Find final modified parameter by their tag
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     float GetModifiedParamByTag(const FGameplayTag &Tag);
+
+    /// Returns final overrided asset value
+    UFUNCTION(BlueprintCallable, Category = ModificationsManager)
+    UObject *GetModifiedAssetByTag(const FGameplayTag &Tag);
+
+    /// Templated version of GetModifiedParamByTag() function
+    template <typename T>
+    T GetModifiedParamByTag(const FGameplayTag &Tag)
+    {
+        static_assert(std::is_arithmetic<T>::value, "Template must be a numeric type");
+        return static_cast<T>(this->GetModifiedParamByTag(Tag));
+    }
+
+    /// Templated version of GetModifiedAssetByTag() function
+    template <class T>
+    T *GetModifiedAssetByTag(const FGameplayTag &Tag)
+    {
+        return Cast<T>(this->GetModifiedAssetByTag(Tag));
+    }
 
     /// Calls whenewer cached parameter was modified
     UPROPERTY(BlueprintAssignable, Category = Events)

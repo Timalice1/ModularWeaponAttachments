@@ -29,6 +29,9 @@ void UStatModificationManager::BeginPlay()
                *GetOwner()->GetName());
         return;
     }
+
+    _finalParameters = _parametersCache;
+    _finalAssets = _assetsCache;
 }
 
 void UStatModificationManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -52,19 +55,37 @@ void UStatModificationManager::EvaluateParameters()
     {
         if (const float *cachedParam = _parametersCache.Find(dirtyParam))
         {
+            bool isPercent = false;
+            bool bClamp = false;
+            float ClampMin = 0.f;
+            float ClampMax = 0.f;
+
             float finalValue = *cachedParam;
+            float percentageValue = 0.f;
             for (const TPair<FName, FModifier> &activeModifier : _activeModifiers)
             {
                 /*Find target modificator for current parameter, and modify target parameter*/
                 if (const FParamModifier *targetModificator = activeModifier.Value.ParametersModificators.Find(dirtyParam))
                 {
                     if (targetModificator->ModificationType == EModifierOp::Percent)
-                        finalValue *= 1 + (targetModificator->Value / 100);
+                    { // Stack percentage value, cache modificator params
+                        isPercent = true;
+                        bClamp = targetModificator->bClampValue;
+                        ClampMin = targetModificator->Min;
+                        ClampMax = targetModificator->Max;
+                        percentageValue += targetModificator->Value;
+                    }
                     if (targetModificator->ModificationType == EModifierOp::Override)
                         finalValue = targetModificator->Value;
                 }
                 else
                     UE_LOG(LogModificationsManager, Warning, TEXT("Modificator for parameter %s did not found"), *dirtyParam.ToString());
+            }
+            if (isPercent)
+            {
+                finalValue *= 1 + (percentageValue / 100);
+                if (bClamp)
+                    finalValue = FMath::Clamp(finalValue, ClampMin, ClampMax);
             }
 
             _finalParameters.Add(dirtyParam, finalValue);
@@ -97,6 +118,7 @@ void UStatModificationManager::OverrideAssets()
                 else
                     UE_LOG(LogModificationsManager, Warning, TEXT("Modificator for parameter %s did not found"), *dirtyAsset.ToString());
             }
+            _finalAssets.Add(dirtyAsset, finalAsset);
             OnAssetModified.Broadcast(dirtyAsset, finalAsset);
         }
         else
@@ -137,7 +159,7 @@ void UStatModificationManager::RemoveModificator(const FName &ModificatorID)
     }
     else
         UE_LOG(LogModificationsManager, Warning,
-               TEXT("%s %s::RemoveModificator: active modifier with id [%s] with not found"),
+               TEXT("%s %s::RemoveModificator: active modifier with id [%s] was not found"),
                *GetOwner()->GetName(), *GetName(), *ModificatorID.ToString());
 }
 
@@ -157,7 +179,32 @@ void UStatModificationManager::MarkAsDirty(const FModifier &modifier)
 
 float UStatModificationManager::GetModifiedParamByTag(const FGameplayTag &Tag)
 {
+    if (_finalParameters.IsEmpty())
+    {
+        UE_LOG(LogModificationsManager, Warning, TEXT("Modified parameters cache is empty"));
+        return 0.f;
+    }
+
     if (const float *finalParam = _finalParameters.Find(Tag))
         return *finalParam;
-    return 0.f;    
+
+    UE_LOG(LogModificationsManager, Warning, TEXT("FinalModifiedParameters: parameter [%s] not found"),
+           *Tag.ToString());
+    return 0.f;
+}
+
+UObject *UStatModificationManager::GetModifiedAssetByTag(const FGameplayTag &Tag)
+{
+    if (_finalAssets.IsEmpty())
+    {
+        UE_LOG(LogModificationsManager, Warning, TEXT("Final assets cache is empty"));
+        return nullptr;
+    }
+    if (!_finalAssets.Contains(Tag))
+    {
+        UE_LOG(LogModificationsManager, Warning, TEXT("Assets cache did not contain parameter [%s]"), *Tag.ToString());
+        return nullptr;
+    }
+
+    return *_finalAssets.Find(Tag);
 }
