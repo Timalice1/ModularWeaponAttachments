@@ -62,7 +62,10 @@ public:
 
     /// Find final modified parameter by their tag
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
-    float GetModifiedParamByTag(const FGameplayTag &Tag);
+    float GetModifiedParamByTag(const FGameplayTag &Tag) const;
+
+    UFUNCTION(BlueprintCallable, Category = ModificationsManager)
+    float GetModifiedParamByTagNormalized(const FGameplayTag &InTag, const float ValueMin = 0.f, const float ValueMax = 1.f) const;
 
     /// Returns final overrided asset value
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)

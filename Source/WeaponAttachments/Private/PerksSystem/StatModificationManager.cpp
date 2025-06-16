@@ -177,7 +177,7 @@ void UStatModificationManager::MarkAsDirty(const FModifier &modifier)
         _dirtyAssets.Add(AssetModifier.Key);
 }
 
-float UStatModificationManager::GetModifiedParamByTag(const FGameplayTag &Tag)
+float UStatModificationManager::GetModifiedParamByTag(const FGameplayTag &Tag) const
 {
     if (_finalParameters.IsEmpty())
     {
@@ -191,6 +191,15 @@ float UStatModificationManager::GetModifiedParamByTag(const FGameplayTag &Tag)
     UE_LOG(LogModificationsManager, Warning, TEXT("FinalModifiedParameters: parameter [%s] not found"),
            *Tag.ToString());
     return 0.f;
+}
+
+float UStatModificationManager::GetModifiedParamByTagNormalized(const FGameplayTag &InTag, const float ValueMin, const float ValueMax) const
+{
+    float retVal = GetModifiedParamByTag(InTag);
+    if (ValueMin != ValueMax) // Prevent dividing by 0
+        retVal = (retVal - ValueMin) / (ValueMax - ValueMin);
+    retVal = FMath::Clamp(retVal, 0, 1);
+    return retVal;
 }
 
 UObject *UStatModificationManager::GetModifiedAssetByTag(const FGameplayTag &Tag)
