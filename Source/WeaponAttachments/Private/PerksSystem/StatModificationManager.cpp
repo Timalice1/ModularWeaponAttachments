@@ -91,6 +91,7 @@ void UStatModificationManager::EvaluateParameters()
             _finalParameters.Add(dirtyParam, finalValue);
 
             /*Send message to the owner about parameter has been modified*/
+            OnParamModifiedNotify.Broadcast();
             OnParameterModified.Broadcast(dirtyParam, finalValue);
         }
         else
@@ -216,4 +217,18 @@ UObject *UStatModificationManager::GetModifiedAssetByTag(const FGameplayTag &Tag
     }
 
     return *_finalAssets.Find(Tag);
+}
+
+TMap<FGameplayTag, FParamModifier> UStatModificationManager::GetModificatorByID(const FName &ModificatorID) const
+{
+    if (_activeModifiers.IsEmpty())
+    {
+        UE_LOG(LogModificationsManager, Warning, TEXT("GetModificatorByTag: active modificators list is empty."))
+        return TMap<FGameplayTag, FParamModifier>();
+    }
+
+    if (const FModifier *modifier = _activeModifiers.Find(ModificatorID))
+        return modifier->ParametersModificators;
+        
+    return TMap<FGameplayTag, FParamModifier>();
 }

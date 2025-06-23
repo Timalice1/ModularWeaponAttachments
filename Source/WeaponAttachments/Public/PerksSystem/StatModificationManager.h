@@ -14,6 +14,7 @@ class WEAPONATTACHMENTS_API UStatModificationManager : public UActorComponent
 
 public:
     UStatModificationManager();
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParameterModifiedNotify);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnParameterModifiedEvent, const FGameplayTag &, ParameterTag, float, Value);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetModifiedEvent, const FGameplayTag &, AssetParameterTag, UObject *, Value);
 
@@ -56,6 +57,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     void RemoveAllModificators();
 
+    UFUNCTION(BlueprintCallable, Category = ModificationsManager)
+    TMap<FGameplayTag, FParamModifier> GetModificatorByID(const FName &ModificatorID) const;
+
     /// Returns all modified parameters
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     TMap<FGameplayTag, float> GetModifiedParameters() const { return _finalParameters; }
@@ -64,6 +68,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     float GetModifiedParamByTag(const FGameplayTag &Tag) const;
 
+    /// Returns normalized value of required parameter [0, 1]
     UFUNCTION(BlueprintCallable, Category = ModificationsManager)
     float GetModifiedParamByTagNormalized(const FGameplayTag &InTag, const float ValueMin = 0.f, const float ValueMax = 1.f) const;
 
@@ -87,6 +92,11 @@ public:
     }
 
     /// Calls whenewer cached parameter was modified
+    UPROPERTY(BlueprintAssignable, BlueprintCallable)
+    FOnParameterModifiedNotify OnParamModifiedNotify;
+
+    /// Calls whenewer cached parameter was modified
+    /// Provide modified parameter data
     UPROPERTY(BlueprintAssignable, Category = Events)
     FOnParameterModifiedEvent OnParameterModified;
 
